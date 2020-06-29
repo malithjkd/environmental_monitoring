@@ -1,0 +1,4 @@
+gcc -0 exam example_edit.c -lwiringPi -lwiringPiDev
+sudo ./exam 
+
+sudo -0 YL-40 YL-40.c -lcurses

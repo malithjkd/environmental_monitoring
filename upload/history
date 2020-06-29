@@ -1,0 +1,48 @@
+gcc -o YL-40 YL-40.c -lcurses
+
+gcc -o YL-40 YL-40.c -lcurses
+
+ gcc -o example1 exmple_edit.c -lwiringPi -lwiringPiDev
+
+
+sudo apt-get inatall git-core  // dont know the resons
+
+git clone git://git.drogon.net/wiringPi
+
+cd wiringPi
+
+git pull origin
+
+./build
+
+gpio -v
+
+gpio readall
+
+
+
+
+i2cdictect 1
+
+sudo apt-get inatall libncureses5-dev
+
+sudo apt-get install python-dev
+
+sudo raspi-config
+
+sudo apt-get install i2c-tools 
+
+i2cdetect -y
+
+
+sudo apt-get isatall apache2
+
+ sudo leafpad /var/www/html/index.html 
+
+sudo apt-install mysql-server --fix-missing
+	root
+	1234
+
+
+
+

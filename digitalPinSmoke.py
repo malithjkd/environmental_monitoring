@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+smoke = 0
+
+from time import sleep           # Allows us to call the sleep function to slow down our loop
+import RPi.GPIO as GPIO           # Allows us to call our GPIO pins and names it just GPIO
+ 
+GPIO.setmode(GPIO.BCM)           # Set's GPIO pins to BCM GPIO numbering
+INPUT_PIN = 17           # Sets our input pin, in this example I'm connecting our button to pin 4. Pin 0 is the SDA pin so I avoid using it for sensors/buttons
+GPIO.setup(INPUT_PIN, GPIO.IN)           # Set our input pin to be an input
+
+# Start a loop that never ends
+while True: 
+           if (GPIO.input(INPUT_PIN) == True): # Physically read the pin now
+                    #print('no Smoke')
+                    smoke = 0
+                    print "val = %d" %smoke
+                    
+           else:
+                    #print('detect Smoke')
+                    smoke = 1
+                    print "val = %d" %smoke
+           sleep(0.5);           # Sleep for a full second before restarting our loop
