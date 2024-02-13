@@ -19,7 +19,7 @@ while True:
 		file_log = open('logfile_dht22.txt','a')
 		file_log.write(file_name+timestamp + ': Sensor faliure'+'\n')
 		#print("Sensor faliure")
-		wait(5)
+		time.sleep(5)
 		file_log.close()
 
 	file.close()
