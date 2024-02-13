@@ -16,7 +16,11 @@ while True:
 		#print(output_string)
 		file.write(output_string + '\n')
 	else:
-		print("Sensor faliure")
+		file_log = open('logfile_dht22.txt','a')
+		file_log.write(file_name+timestamp + ': Sensor faliure'+'\n')
+		#print("Sensor faliure")
+		wait(5)
+		file_log.close()
 
 	file.close()
 	time.sleep(60)
