@@ -11,8 +11,8 @@ relay_2 = Pin(16,Pin.OUT)
 sensor = dht.DHT22(Pin(22))
 
 
-ssid = 'osiris-sg'
-password = 'bbppu35643'
+ssid = ''
+password = ''
 
 # Connect to network
 def connect():
