@@ -12,3 +12,30 @@ The [sensorair_test.py](https://github.com/malithjkd/environmental_monitoring/bl
 
 https://github.com/malithjkd/environmental_monitoring/blob/master/docs/assets/Sensor_Air_S8_connect_to_raspberry_pi_pico_w.jpg
 
+
+
+
+### Install mosquitto 
+
+Install mosquitto on raspberry pi 
+
+```consol
+sudo apt update && sudo apt upgrade
+```
+
+```consol
+sudo apt install -y mosquitto mosquitto-clients
+```
+
+test running or not
+```cernal
+mosquitto -v
+```
+
+enable defalt start
+
+```cernal
+sudo systemctl enable mosquitto.service
+```
+
+https://randomnerdtutorials.com/how-to-install-mosquitto-broker-on-raspberry-pi/#mosquitto-set-user-password
