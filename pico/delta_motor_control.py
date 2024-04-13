@@ -17,8 +17,8 @@ relay_2.off()
 #ssid = 'Guests'
 #password = 'Welcome2PBA'
 
-ssid = 'PBA Group'
-password = 'donttellanyone'
+ssid = 'NinjaWarriers'
+password = 'Boys1234'
 
 #ssid = 'Pixel_7461'
 #password = 'nevergiveup154'
