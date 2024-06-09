@@ -19,4 +19,5 @@ camera.rotation = 180
 camera.resolution = (2592, 1944)
 camera.start_preview()
 sleep(2)
+#camera.capture(pic_name)
 camera.capture('1_1_1.jpg')
