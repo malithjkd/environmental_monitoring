@@ -5,7 +5,7 @@ import time
 GPIO.setmode(GPIO.BCM)
 
 # Set up GPIO pins
-output_pins = [17, 18, 27]  # List of GPIO pin numbers to be used as outputs
+output_pins = [8, 10, 12, 16]  # List of GPIO pin numbers to be used as outputs
 
 # Set all pins as output and initialize to LOW
 for pin in output_pins:
