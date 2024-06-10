@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 DHT_SENSOR = Adafruit_DHT.DHT22
-DHT_PIN = 4
+DHT_PIN = 24
 print("Indoor Temparature and humidity measument started")
 while True:
 	file_name = datetime.now().strftime("%Y%m%d"+".txt")
