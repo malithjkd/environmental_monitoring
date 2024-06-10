@@ -13,13 +13,14 @@ for pin in output_pins:
     GPIO.output(pin, GPIO.HIGH)
 
 
-for pin in output_pins:
-    GPIO.output(pin, GPIO.LOW)
-    print("Pin number: ",pin," is LOW")
-    time.sleep(1)
-    GPIO.output(pin, GPIO.HIGH)
-    print("Pin number: ",pin," is HIGH")
-    time.sleep(1)
+for x in range (0,10):
+    for pin in output_pins:
+        GPIO.output(pin, GPIO.LOW)
+        print("Pin number: ",pin," is LOW")
+        time.sleep(1)
+        GPIO.output(pin, GPIO.HIGH)
+        print("Pin number: ",pin," is HIGH")
+        time.sleep(1)
 
 
 # Clean up GPIO settings before exiting
