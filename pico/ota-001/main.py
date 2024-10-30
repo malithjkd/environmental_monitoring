@@ -3,11 +3,10 @@ import utime
 import network
 import machine
 
+led_onboard = machine.Pin("LED",machine.Pin.OUT)
 
 while True:
-    led_buildin.on()
-    relay_2.on()
+    led_onboard.on()
     utime.sleep_ms(500)
-    led_buildin.off()
-    relay_2.off()
+    led_onboard.off()
     utime.sleep_ms(500)
