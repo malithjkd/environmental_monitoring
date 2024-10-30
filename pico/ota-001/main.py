@@ -7,6 +7,6 @@ led_onboard = machine.Pin("LED",machine.Pin.OUT)
 
 while True:
     led_onboard.on()
-    utime.sleep_ms(150)
+    utime.sleep_ms(10)
     led_onboard.off()
-    utime.sleep_ms(150)
+    utime.sleep_ms(10)
