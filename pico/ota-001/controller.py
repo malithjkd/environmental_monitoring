@@ -1,0 +1,24 @@
+from machine import Pin
+import utime
+import network
+import machine
+
+class controller():
+    def __init__(self):
+        #led_pin = Pin('WL_GPIO0',machine.Pin.OUT) # Inbuild LED pin number name
+        led_buildin = Pin("LED", Pin.OUT)	# they recoment to use inbuild LED 
+        relay_1 = Pin(15,Pin.OUT)
+        relay_2 = Pin(16,Pin.OUT)
+        
+
+    def blink(timer1):
+        led.toggle()
+
+    def IO_Control():
+        led_buildin.on()
+        relay_2.on()
+        utime.sleep_ms(500)
+    
+        led_buildin.off()
+        relay_2.off()
+        utime.sleep_ms(500)
