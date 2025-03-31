@@ -14,14 +14,14 @@ class controller():
     #def blink(timer1):
     #    led.toggle()
 
-    def blink():
+    def blink(self):
         led.toggle()
         utime.sleep_ms(1000)
         led.toggle()
         utime.sleep_ms(1000)
 
 
-    def IO_Control():
+    def IO_Control(self):
         while True:
             led_buildin.on()
             #relay_1.on()
