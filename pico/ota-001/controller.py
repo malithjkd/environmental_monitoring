@@ -37,7 +37,7 @@ class controller():
     def controller_start(self):
         # Initialize the controller
         print("Controller initialized")
-        timer1.init(freq=5, mode=machine.Timer.PERIODIC, callback=self.blink)
+        timer1.init(freq=15, mode=machine.Timer.PERIODIC, callback=self.blink)
     
     def controller_stop(self):
         # Stop the controller
