@@ -11,14 +11,23 @@ class controller():
         relay_2 = Pin(16,Pin.OUT)
         
 
-    def blink(timer1):
+    #def blink(timer1):
+    #    led.toggle()
+
+    def blink():
         led.toggle()
+        utime.sleep_ms(1000)
+        led.toggle()
+        utime.sleep_ms(1000)
+
 
     def IO_Control():
-        led_buildin.on()
-        relay_2.on()
-        utime.sleep_ms(500)
+        while True:
+            led_buildin.on()
+            #relay_1.on()
+            utime.sleep_ms(500)
     
-        led_buildin.off()
-        relay_2.off()
-        utime.sleep_ms(500)
+            led_buildin.off()
+            #relay_1.off()
+            utime.sleep_ms(500)
+        
