@@ -1,4 +1,5 @@
 import network
+from machine import Timer
 from time import sleep
 from machine import Pin
 import sys  # Import sys to read inputs from Thonny
@@ -13,6 +14,7 @@ main_controller = controller()
 
 # Initialize the onboard LED
 pico_led = Pin("LED", Pin.OUT)
+timer1 = Timer()
 
 def wifi_connect(SSID, PASSWORD):
     """
@@ -54,9 +56,15 @@ def main():
     while True:
         if network.WLAN(network.STA_IF).isconnected():
             print("wifi is connected")
+            timer1.deinit()
             
+            main_controller.controller_stop()
             ota_updater.download_and_install_update_if_available()
-            main_controller.IO_Control()
+            main_controller.controller_start()
+
+            timer1.init(freq=1, mode=Timer.PERIODIC, callback=main_controller.blink)
+            
+            #main_controller.IO_Control()
             sleep(1)
         else:
             print("Wi-Fi disconnected. Reconnecting...")
