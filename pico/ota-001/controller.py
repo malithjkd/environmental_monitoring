@@ -32,14 +32,14 @@ class controller():
             print("Current time:", current_time)
             
             hour = current_time[3] + 8  # Extract the hour from the time tuple and convert it to singapore time
-            
+            hour = hour % 24 
             # Check if the current time is between 21:00 and 11:00
-            if 21 <= hour or hour < 23:
+            if 21 <= hour < 23 or 5 <= hour < 8:
                 relay_1.on()  # Turn on relay_1
                 print("Relay 1 is ON")
-            elif 6 <= hour or hour < 8:
-                relay_1.on()  # Turn on relay_1
-                print("Relay 1 is ON")
+            #elif 6 <= hour < 8:
+            #    relay_1.on()  # Turn on relay_1
+            #    print("Relay 1 is ON")
             else:
                 relay_1.off()  # Turn off relay_1
                 print("Relay 1 is OFF")
