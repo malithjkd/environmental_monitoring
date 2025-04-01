@@ -1,4 +1,5 @@
 from machine import Pin
+import ntptime
 import utime
 import network
 import machine
@@ -19,28 +20,49 @@ class controller():
         
     def blink(self,timer1):
         led_buildin.toggle()
-        relay_1.toggle()
-        
 
 
-    def IO_Control(self):
-        while True:
-            led_buildin.on()
-            #relay_1.on()
-            utime.sleep_ms(200)
-    
-            led_buildin.off()
-            #relay_1.off()
-            utime.sleep_ms(200)
-        
-
+    def control_relay_based_on_time(self):
+        try:
+            # Sync time with NTP server
+            ntptime.settime()
+            
+            # Get the current time
+            current_time = utime.localtime()
+            print("Current time:", current_time)
+            
+            hour = current_time[3] + 8  # Extract the hour from the time tuple and convert it to singapore time
+            
+            # Check if the current time is between 21:00 and 11:00
+            if 21 <= hour or hour < 23:
+                relay_1.on()  # Turn on relay_1
+                print("Relay 1 is ON")
+            elif 6 <= hour or hour < 8:
+                relay_1.on()  # Turn on relay_1
+                print("Relay 1 is ON")
+            else:
+                relay_1.off()  # Turn off relay_1
+                print("Relay 1 is OFF")
+        except Exception as e:
+            print("Failed to control relay based on time:", e)
+            
 
     def controller_start(self):
         # Initialize the controller
         print("Controller initialized")
         timer1.init(freq=1, mode=machine.Timer.PERIODIC, callback=self.blink)
+        self.control_relay_based_on_time()
     
     def controller_stop(self):
         # Stop the controller
         print("Controller stopped")
         timer1.deinit()
+        
+        
+
+
+
+# test code 
+#test_controller = controller()
+#test_controller.controller_start()
+
