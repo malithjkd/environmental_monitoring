@@ -5,11 +5,11 @@ import machine
 from machine import Timer
 
 led_buildin = Pin("LED", Pin.OUT)
-relay_1 = Pin(15,Pin.OUT)
-relay_2 = Pin(16,Pin.OUT)
+relay_1 = Pin(7,Pin.OUT)
+relay_2 = Pin(8,Pin.OUT)
 
 timer1 = machine.Timer()
-        
+
 
 class controller():
     def __init__(self):
