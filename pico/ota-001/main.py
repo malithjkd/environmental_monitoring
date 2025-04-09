@@ -14,6 +14,9 @@ main_controller = controller()
 # Initialize the onboard LED
 pico_led = Pin("LED", Pin.OUT)
 
+# Configure Watchdog Timer (example - adjust timeout as needed)
+#watchdog = machine.WDT(timeout=5000)  # 5 seconds timeout
+
 
 def wifi_connect(SSID, PASSWORD):
     """
@@ -32,6 +35,7 @@ def wifi_connect(SSID, PASSWORD):
             count += 1
         else:
             count = 60
+            machine.reset() 
     
     if count == 30:
         print("Connection attempt failed")
@@ -68,7 +72,7 @@ def main():
             else:
                 print("Failed to connect to Wi-Fi. Retrying in the background...")
             sleep(1)
-        
+        #watchdog.feed()
         sleep(120)
         
             
