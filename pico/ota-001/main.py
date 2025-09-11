@@ -2,6 +2,7 @@ import network
 from time import sleep
 from machine import Pin
 import sys  # Import sys to read inputs from Thonny
+import machine  # Import machine for watchdog and reset
 from WIFI_CONFIG import SSID, PASSWORD
 from controller import controller
 from ota import OTAUpdater
@@ -14,8 +15,10 @@ main_controller = controller()
 # Initialize the onboard LED
 pico_led = Pin("LED", Pin.OUT)
 
-# Configure Watchdog Timer (example - adjust timeout as needed)
-#watchdog = machine.WDT(timeout=5000)  # 5 seconds timeout
+
+# Configure Watchdog Timer (adjust timeout as needed)
+# Timeout is in milliseconds
+watchdog = machine.WDT(timeout=8000)  # 8 seconds timeout
 
 
 def wifi_connect(SSID, PASSWORD):
@@ -72,7 +75,7 @@ def main():
             else:
                 print("Failed to connect to Wi-Fi. Retrying in the background...")
             sleep(1)
-        #watchdog.feed()
+        watchdog.feed()  # Reset watchdog timer to prevent auto-reset
         sleep(120)
         
             
