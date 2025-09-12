@@ -169,6 +169,7 @@ try:
     ip = connect(ssid, password)
     connection = open_socket(ip)
     print("connection is finished")
+    print("Web server running on http://%s:80" % ip)
     serve(connection)
 except KeyboardInterrupt:
     machine.reset()
