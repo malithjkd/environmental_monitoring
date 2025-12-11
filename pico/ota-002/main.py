@@ -13,7 +13,7 @@ from ota import OTAUpdater
 wdt = machine.WDT(timeout=8000)
 led = machine.Pin("LED", machine.Pin.OUT)
 
-async def wifi_connect(SSID, PASSWORD):
+def wifi_connect(SSID, PASSWORD):
     """
     Connect to WLAN and return the IP address.
     """
@@ -25,7 +25,7 @@ async def wifi_connect(SSID, PASSWORD):
         wlan.connect(SSID, PASSWORD)
         if not wlan.isconnected():
             print(f"Attempt {count} to connect... ")
-            asyncio.sleep(1)
+            time.sleep(1)
             led.on()
             count += 1
         else:
@@ -36,7 +36,7 @@ async def wifi_connect(SSID, PASSWORD):
         print("Connection attempt failed")
         ip = 0
         led.off()
-        asyncio.sleep(60)
+        time.sleep(60)
         ip = wifi_connect(SSID, PASSWORD)
     else:
         ip = wlan.ifconfig()[0]
@@ -49,7 +49,7 @@ async def wifi_connect(SSID, PASSWORD):
 
 
 
-async def network_connector():
+async def main_controller():
     await asyncio.sleep(1)
     while True:
         if network.WLAN(network.STA_IF).isconnected():
@@ -67,6 +67,7 @@ async def network_connector():
             else:
                 print("Failed to connect to Wi-Fi. Retrying in the background...")
             await asyncio.sleep(1)
+            
         # watchdog.feed()  # Reset watchdog timer to prevent auto-reset
         await asyncio.sleep(120)
 
@@ -76,7 +77,7 @@ async def feed_watchdog():
     while True:
         print("Feeding watchdog...")
         wdt.feed()
-        await asyncio.sleep(5)
+        await asyncio.sleep(500)
 
 
 
@@ -90,14 +91,16 @@ async def blink_led():
 
 async def background_task():
     while True:
-        print("Background task running...")
+        print(SSID, PASSWORD)
         await asyncio.sleep(5)
 
 async def main_loop():
     # You can start multiple tasks here
     asyncio.create_task(feed_watchdog())
-    asyncio.create_task(blink_led())
-    asyncio.create_task(background_task())
+    #asyncio.create_task(blink_led())
+    #asyncio.create_task(background_task())
+    asyncio.create_task(main_controller())
+
     print("All tasks started, main loop sleeping indefinitely.")
     while True:
         await asyncio.sleep(3600) # Sleep for a long time, allowing other tasks to run
