@@ -1,3 +1,7 @@
+# cd ..  && cd .. && source py313/bin/activate && cd environmental_monitoring/pico/ &&  python sensorair_server_setup.py
+
+
+
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
