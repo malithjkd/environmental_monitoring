@@ -17,8 +17,8 @@ led_buildin = Pin("LED", Pin.OUT)
 utime.sleep_ms(500)
 
 # --- Wi-Fi Configuration ---
-SSID = 'NinjaWarriers'    # Replace with your Wi-Fi name
-PASSWORD = 'Boys1234' # Replace with your Wi-Fi password
+SSID = 'sweet_milo'    # Replace with your Wi-Fi name
+PASSWORD = 'zRzhkVXuF4Xu15ssfqqReyrdcasdfyr15478sdfvdyyrfxs' # Replace with your Wi-Fi password
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
