@@ -10,7 +10,7 @@ from datetime import datetime
 
 # --- Configuration ---
 # IMPORTANT: Replace with the actual IP address of your Pico W
-PICO_W_IP = '192.168.1.2' 
+PICO_W_IP = '192.168.1.33' 
 API_URL = f"http://{PICO_W_IP}/"
 DATA_FILE = 'co2_data.csv'
 SAMPLE_INTERVAL_SECONDS = 30 # How often to poll the sensor
