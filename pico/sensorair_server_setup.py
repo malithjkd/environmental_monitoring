@@ -1,6 +1,6 @@
 # cd ..  && cd .. && source py313/bin/activate && cd environmental_monitoring/pico/ &&  python sensorair_server_setup.py
 
-
+# scp malithjkd@192.168.1.34:Documents/environmental_monitoring/pico/co2_plot.png ~/Documents/environmental_monitoring/pico/
 
 import requests
 import pandas as pd
