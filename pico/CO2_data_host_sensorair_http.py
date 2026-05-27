@@ -17,8 +17,9 @@ led_buildin = Pin("LED", Pin.OUT)
 utime.sleep_ms(500)
 
 # --- Wi-Fi Configuration ---
-SSID = 'SINGTEL-B860_6G'    # Replace with your Wi-Fi name
-PASSWORD = 'xa8gA6V93FSSg958werKDXUQEKDXcxkswerxkuwe19566QWEdsgccgPoxjg' # Replace with your Wi-Fi password
+SSID = 'SINGTEL-B860'    # Replace with your Wi-Fi name
+PASSWORD = 'zRzhkVXuF4Xu'
+#PASSWORD = 'xa8gA6V93FSSg958werKDXUQEKDXcxkswerxkuwe19566QWEdsgccgPoxjg' # Replace with your Wi-Fi password
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
