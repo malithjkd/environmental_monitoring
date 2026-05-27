@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-mpremote>=0.4.0
-rshell>=0.0.32
-=======
 mpremote==1.28.0
 platformdirs==4.9.6
 pyserial==3.5
->>>>>>> f28aa50dd64dc637982678e0313aea5c0199f29e
