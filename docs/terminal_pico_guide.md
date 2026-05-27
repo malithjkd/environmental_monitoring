@@ -34,6 +34,10 @@ Run the following commands in your project folder (`/Users/malithjkd1/Documents/
 > source .venv/bin/activate
 > ```
 
+   ```bash
+   pip freeze > requirements.txt
+   ```
+
 ---
 
 ## 2. Troubleshooting & Finding the Pico's Serial Port
