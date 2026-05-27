@@ -68,7 +68,37 @@ If the Pico is connected but `ls /dev/ttyACM*` returns nothing:
 
 If it lists `/dev/ttyACM10` (or any other port), make sure to pass that port explicitly to your tools (e.g., `rshell -p /dev/ttyACM10`).
 
+### Step 3: Fixing "Device or Resource Busy" (Port Locked)
+If you get a "device busy" or "port locked" error when running `mpremote` or `rshell`, it means **another process is actively holding the serial connection open** (only one program can talk to `/dev/ttyACM0` at a time).
+
+1. **Kill all background terminal/monitor sessions** instantly:
+   ```bash
+   sudo fuser -k /dev/ttyACM0
+   ```
+   *(This terminates any process currently locking `/dev/ttyACM0`.)*
+
+2. **Alternatively, terminate common culprits manually**:
+   ```bash
+   pkill -f mpremote
+   pkill -f rshell
+   pkill -f screen
+   pkill -f minicom
+   ```
+   *(Also make sure Thonny IDE or any other MicroPython GUI is completely closed.)*
+
+3. **Disable ModemManager (If it keeps locking the port)**:
+   ModemManager in Linux automatically scans new USB serial ports to check if they are cell modems, locking the device for 5–10 seconds. You can safely disable it:
+   ```bash
+   sudo systemctl stop ModemManager
+   sudo systemctl disable ModemManager
+   ```
+
+4. **Pico is stuck in a tight loop**:
+   If the Pico's current `main.py` is in an infinite loop without sleeping or is blocked in a network socket connect call, the serial driver on the board might hang.
+   * *Fix:* Unplug the Pico, plug it back in, and immediately run `mpremote connect /dev/ttyACM0 repl` and press `Ctrl + C` repeatedly to halt execution before `main.py` blocks the serial bus.
+
 ---
+
 
 ## 3. Option A: Using `mpremote` (Highly Recommended)
 
@@ -85,7 +115,7 @@ mpremote repl
 
 *If you need to specify a non-standard port like `/dev/ttyACM10` explicitly, run:*
 ```bash
-mpremote dev /dev/ttyACM10 repl
+mpremote connect /dev/ttyACM10 repl
 ```
 
 ### Step 2: Copy and Update Files
@@ -94,7 +124,7 @@ You can upload files from your Raspberry Pi 5 to the Pico:
   ```bash
   mpremote cp pico/air_quality_control.py :main.py
   ```
-  *(Or explicitly on a specific port: `mpremote dev /dev/ttyACM10 cp pico/air_quality_control.py :main.py`)*
+  *(Or explicitly on a specific port: `mpremote connect /dev/ttyACM0 cp pico/air_quality_control.py :main.py`)*
 
 * **List files on the Pico:**
   ```bash
@@ -110,6 +140,9 @@ You can upload files from your Raspberry Pi 5 to the Pico:
 To run a Python file immediately on the Pico without saving it permanently:
 ```bash
 mpremote run pico/air_quality_control.py
+```
+```bash
+mpremote run pico/CO2_data_host_sensorair_http.py
 ```
 
 ---
@@ -158,9 +191,61 @@ To deploy your active file [air_quality_control.py](file:///Users/malithjkd1/Doc
    ```
 2. **Upload the script as `main.py`**:
    ```bash
-   mpremote dev /dev/ttyACM10 cp pico/air_quality_control.py :main.py
+   mpremote connect /dev/ttyACM0 cp pico/air_quality_control.py :main.py
    ```
 3. **Reset and monitor live console output**:
    ```bash
-   mpremote dev /dev/ttyACM10 reset repl
+   mpremote connect /dev/ttyACM0 reset repl
    ```
+
+---
+
+## 6. Nuking (Erasing) and Flashing MicroPython
+
+If your Pico is behaving strangely or you want a completely clean slate, you can erase the entire flash memory (nuke it) and reinstall the MicroPython firmware.
+
+### Step 1: Put the Pico into BOOTSEL Mode
+You can do this either via software or hardware.
+
+* **Method A (Software - Fast):** If MicroPython is currently running on `/dev/ttyACM0`, execute:
+  ```bash
+  mpremote connect /dev/ttyACM0 bootloader
+  ```
+  *(This will immediately reboot the Pico into BOOTSEL mode and disconnect `/dev/ttyACM0`.)*
+
+* **Method B (Hardware):** 
+  1. Unplug the USB cable from the Pico.
+  2. Press and hold down the white **BOOTSEL** button on the Pico board.
+  3. While holding the button, plug the USB cable back into the Raspberry Pi 5.
+  4. Release the **BOOTSEL** button.
+
+### Step 2: Verify the Pico is Mounted as a USB Drive
+When the Pico is in BOOTSEL mode, it identifies as a USB mass storage device named **`RPI-RP2`**.
+* In Raspberry Pi OS, it usually auto-mounts at:
+  `/media/$USER/RPI-RP2/`
+* You can verify its mount point by running:
+  ```bash
+  lsblk
+  ```
+
+### Step 3: Erase the Flash (Nuke)
+Copy the `flash_nuke.uf2` file to the mounted Pico drive:
+```bash
+cp pico/flash_nuke.uf2 /media/$USER/RPI-RP2/
+```
+*The Pico's onboard LED will blink, it will erase the flash, and automatically reboot back into BOOTSEL mode (appearing as `RPI-RP2` again).*
+
+### Step 4: Flash MicroPython (for Pico W)
+Since your project uses `network` for Wi-Fi, you have a **Raspberry Pi Pico W**. 
+
+1. **Download the latest Pico W firmware**:
+   ```bash
+   wget https://micropython.org/resources/firmware/RPI_PICO_W-20241129-v1.24.1.uf2 -O pico/micropython_pico_w.uf2
+   ```
+
+2. **Copy the firmware to flash the Pico W**:
+   ```bash
+   cp pico/micropython_pico_w.uf2 /media/$USER/RPI-RP2/
+   ```
+
+*The Pico W will automatically reboot. Within a few seconds, it will start up running MicroPython and will reappear as `/dev/ttyACM0`!*
