@@ -13,8 +13,8 @@ relay_3 = Pin(15,Pin.OUT)
 
 while True:
     led_buildin.on()
-    relay_2.on()
+    relay_1.on()
     utime.sleep_ms(1500)
     led_buildin.off()
-    relay_2.off()
+    relay_1.off()
     utime.sleep_ms(1500)
