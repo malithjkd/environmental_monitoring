@@ -104,6 +104,13 @@ If you get a "device busy" or "port locked" error when running `mpremote` or `rs
 
 Once your `.venv` is activated and permissions are configured:
 
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install mpremote
+```
+
 ### Step 1: Open the Interactive REPL (Python Console)
 To access the live MicroPython terminal on the Pico:
 ```bash

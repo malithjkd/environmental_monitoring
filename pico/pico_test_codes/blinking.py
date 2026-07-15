@@ -10,24 +10,6 @@ relay_1 = Pin(15,Pin.OUT)
 relay_2 = Pin(16,Pin.OUT)
 
 
-ssid = 'NinjaWarriers'
-password = 'Boys1234'
-
-# Connect to network
-def connect():
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    wlan.connect(ssid, password)
-    utime.sleep_ms(1000)
-    for x in range(1,50):
-        if wlan.isconnected() == False:
-            print('Waiting for connection...')
-            utime.sleep_ms(1000)
-        else:
-            ip = wlan.ifconfig()[0]
-            print(f'Connected on {ip}')
-            break
-        x = x+1
 
 while True:
     led_buildin.on()
