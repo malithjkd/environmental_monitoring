@@ -1,0 +1,3 @@
+# Ignore the secrets file containing WiFi passwords
+pico/secrets.py
+secrets.py

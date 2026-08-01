@@ -5,6 +5,7 @@ import machine
 import utime
 import dht
 from machine import UART
+import secrets
 
 #pico inbuild 
 pico_led = machine.Pin("LED",machine.Pin.OUT)
@@ -25,9 +26,6 @@ pico_led.off()
 relay_1.off()
 relay_2.off()
 
-ssid = 'TP-Link_0007'
-password = '70999846'
-
 def read_temperature_value():
     adc_value = sensor.read_u16()
     volt = (3.3/65535) * adc_value
@@ -46,18 +44,26 @@ def read_co2_value():
 #    print(value)
     return(value)
 
-def connect(ssid, password): # Connect to network
+def connect(): # Connect to network
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
 
-    wlan.connect(ssid, password)
+    for network_info in secrets.WIFI_NETWORKS:
+        ssid = network_info['ssid']
+        password = network_info['password']
+        print(f"Trying to connect to {ssid}...")
+        wlan.connect(ssid, password)
 
-    for x in range(1,70):
-        if wlan.isconnected() == False:
+        connected = False
+        for x in range(1, 20): # wait up to 20 seconds per network
+            if wlan.isconnected():
+                connected = True
+                break
             print('Waiting for connection...')
             sleep(1)
             pico_led.on()
-        else:
+            
+        if connected:
             ip = wlan.ifconfig()[0]
             print(wlan.ifconfig())
             print(f'Connected on {ip}')
@@ -66,10 +72,11 @@ def connect(ssid, password): # Connect to network
             pico_led.on()
             utime.sleep_ms(300)
             pico_led.off()
-            break
-        x = x+1
+            return ip
+        else:
+            print(f"Failed to connect to {ssid}")
     
-    return ip
+    raise RuntimeError("Could not connect to any configured WiFi networks")
 
 def open_socket(ip):
     # Open a socket
@@ -184,7 +191,7 @@ def serve(connection):
 # main
 
 try: 
-    ip = connect(ssid, password)
+    ip = connect()
     connection = open_socket(ip)
     print("connection is finished")
     serve(connection)
