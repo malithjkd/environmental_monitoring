@@ -20,8 +20,9 @@ uart.init(9600,bits=8, parity = None, stop=1)
 relay_1 = machine.Pin(12,machine.Pin.OUT)
 relay_2 = machine.Pin(13,machine.Pin.OUT)
 
-# DHT22 sensor on GPIO2 (data pin)
-dht22_sensor = dht.DHT22(machine.Pin(2))
+# DHT22 sensor on GPIO2 (data pin) with internal pull-up
+dht22_pin = machine.Pin(2, machine.Pin.IN, machine.Pin.PULL_UP)
+dht22_sensor = dht.DHT22(dht22_pin)
 
 
 
@@ -30,6 +31,10 @@ pico_led.off()
 relay_1.off()
 relay_2.off()
 
+# DHT22 needs ~2 seconds after power-on before first read
+print("Waiting for DHT22 warm-up...")
+utime.sleep_ms(2000)
+
 def read_temperature_value():
     adc_value = sensor.read_u16()
     volt = (3.3/65535) * adc_value
@@ -37,15 +42,17 @@ def read_temperature_value():
     return round(temperature, 1)
 
 def read_dht22():
-    """Read temperature and humidity from DHT22 sensor."""
-    try:
-        dht22_sensor.measure()
-        temp = dht22_sensor.temperature()
-        hum = dht22_sensor.humidity()
-        return round(temp, 1), round(hum, 1)
-    except Exception as e:
-        print("DHT22 read error:", e)
-        return None, None
+    """Read temperature and humidity from DHT22 sensor with retry."""
+    for attempt in range(3):
+        try:
+            dht22_sensor.measure()
+            temp = dht22_sensor.temperature()
+            hum = dht22_sensor.humidity()
+            return round(temp, 1), round(hum, 1)
+        except Exception as e:
+            print(f"DHT22 read error (attempt {attempt+1}/3):", e)
+            utime.sleep_ms(2000)  # DHT22 needs min 2s between reads
+    return None, None
 
 def read_co2_value():
     uart.write(b"\xFE\x44\x00\x08\x02\x9F\x25")
