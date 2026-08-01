@@ -20,6 +20,10 @@ uart.init(9600,bits=8, parity = None, stop=1)
 relay_1 = machine.Pin(12,machine.Pin.OUT)
 relay_2 = machine.Pin(13,machine.Pin.OUT)
 
+# DHT22 sensor on GPIO2 (data pin)
+dht22_sensor = dht.DHT22(machine.Pin(2))
+
+
 
 
 pico_led.off()
@@ -31,6 +35,17 @@ def read_temperature_value():
     volt = (3.3/65535) * adc_value
     temperature = 27 - (volt - 0.706)/0.001721
     return round(temperature, 1)
+
+def read_dht22():
+    """Read temperature and humidity from DHT22 sensor."""
+    try:
+        dht22_sensor.measure()
+        temp = dht22_sensor.temperature()
+        hum = dht22_sensor.humidity()
+        return round(temp, 1), round(hum, 1)
+    except Exception as e:
+        print("DHT22 read error:", e)
+        return None, None
 
 def read_co2_value():
     uart.write(b"\xFE\x44\x00\x08\x02\x9F\x25")
@@ -105,11 +120,33 @@ def open_socket(ip):
     return connection
 
 
-def webpage(temperature, state,co2_value):
+def webpage(temperature, state, co2_value, dht22_temp, dht22_hum):
     #Template HTML
+    
+    # Format DHT22 values (handle None when sensor fails)
+    dht_temp_str = f"{dht22_temp} &deg;C" if dht22_temp is not None else "Sensor Error"
+    dht_hum_str = f"{dht22_hum} %" if dht22_hum is not None else "Sensor Error"
+    
     html = f"""
             <!DOCTYPE html>
             <html>
+            <head>
+            <title>Pico Environmental Monitor</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            </head>
+            <body>
+            <h2>Environmental Monitor</h2>
+            
+            <h3>Sensor Readings</h3>
+            <p><b>DHT22 Temperature:</b> {dht_temp_str}</p>
+            <p><b>DHT22 Humidity:</b> {dht_hum_str}</p>
+            <p><b>Pico Internal Temp:</b> {temperature} &deg;C</p>
+            <p><b>CO2 Value:</b> {co2_value} ppm</p>
+            
+            <hr>
+            <h3>Controls</h3>
+            <p>LED is {state}</p>
+            
             <form action="./lighton">
             <input type="submit" value="Light on" />
             </form>
@@ -119,7 +156,6 @@ def webpage(temperature, state,co2_value):
             <form action="./lightblink">
             <input type="submit" value="Light Blink" />
             </form>
-            <p>LED is {state}</p>
             
             <form action="./led2on">
             <input type="submit" value="Light2 on" />
@@ -141,8 +177,6 @@ def webpage(temperature, state,co2_value):
             <input type="submit" value="Light3 Blink" />
             </form> 
             
-           <p>Temperature is {temperature}</p>
-           <p>CO2 value is {co2_value}</p>
             </body>
             </html>
             """
@@ -200,7 +234,8 @@ def serve(connection):
             state = 'DIO 2 Blinked'
         temperature = read_temperature_value()
         co2_value = read_co2_value()
-        html = webpage(temperature, state,co2_value)
+        dht22_temp, dht22_hum = read_dht22()
+        html = webpage(temperature, state, co2_value, dht22_temp, dht22_hum)
         client.send(html)
         client.close()
 
