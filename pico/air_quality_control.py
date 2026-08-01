@@ -68,13 +68,23 @@ def connect(): # Connect to network
             print(wlan.ifconfig())
             print(f'Connected on {ip}')
             pico_led.off()
-            utime.sleep_ms(300)
+            utime.sleep_ms(500)
             pico_led.on()
-            utime.sleep_ms(300)
+            utime.sleep_ms(500)
             pico_led.off()
             return ip
         else:
             print(f"Failed to connect to {ssid}")
+
+        # Reconnect after 5 seconds
+
+        pico_led.on()
+        utime.sleep_ms(100)
+        pico_led.off()
+        utime.sleep_ms(100)
+        pico_led.on()
+        sleep(50)
+        pico_led.off()
     
     raise RuntimeError("Could not connect to any configured WiFi networks")
 
