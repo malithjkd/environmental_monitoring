@@ -37,12 +37,18 @@ def read_co2_value():
     utime.sleep_ms(3000)
     data = uart.read(7)
     #print(data)
-    byte_3 = data[3]
-    byte_4 = data[4]
     
-    value = (byte_3*256)+byte_4    
-#    print(value)
-    return(value)
+    # Check if data is valid before parsing
+    if data is not None and len(data) >= 5:
+        byte_3 = data[3]
+        byte_4 = data[4]
+        
+        value = (byte_3*256)+byte_4    
+    #    print(value)
+        return(value)
+    else:
+        print("Warning: CO2 sensor returned no data (is it connected?)")
+        return -1
 
 def connect(): # Connect to network
     wlan = network.WLAN(network.STA_IF)
