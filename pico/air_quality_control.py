@@ -24,14 +24,9 @@ relay_2 = machine.Pin(13,machine.Pin.OUT)
 pico_led.off()
 relay_1.off()
 relay_2.off()
-#ssid = 'Guests'
-#password = 'Welcome2PBA'
 
 ssid = 'TP-Link_0007'
 password = '70999846'
-
-#ssid = 'Pixel_7461'
-#password = 'nevergiveup154'
 
 def read_temperature_value():
     adc_value = sensor.read_u16()

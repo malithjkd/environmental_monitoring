@@ -107,7 +107,6 @@ Once your `.venv` is activated and permissions are configured:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-
 pip install mpremote
 ```
 
@@ -141,6 +140,7 @@ You can upload files from your Raspberry Pi 5 to the Pico:
 * **Remove a file from the Pico:**
   ```bash
   mpremote rm main.py
+  mpremote reset
   ```
 
 ### Step 3: Run a Program on the Pico
