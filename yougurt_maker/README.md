@@ -48,6 +48,13 @@ When the script starts, it will print an IP address to the terminal (e.g., `List
 
 
 
-#### Copy log file
+### 4. Copy log file
 
+```bash
 scp malithjkd@pizero2:~/environmental_monitoring/pico/temperature_log.csv /Users/malithjkd1/Documents/environmental_monitoring/pico/
+```
+
+### 5. Yourget types and  temperature requirements
+
+https://yogourmet.com/en/canada/product-details/mild-yogurt-starter/
+
