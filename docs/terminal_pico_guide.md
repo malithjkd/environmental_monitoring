@@ -277,7 +277,7 @@ Since your project uses `network` for Wi-Fi, you have a **Raspberry Pi Pico W**.
 
 
 
-# yoget maker tesing
+# Yogurt Maker tesing
 ```bash
-mpremote run temperature_controller.py | while read line; do echo "$(date +'%Y-%m-%d %H:%M:%S'),$line" | tee -a temperature_log.csv; done
+mpremote run yogurt_maker/temperature_controller.py | while read line; do echo "$(date +'%Y-%m-%d %H:%M:%S'),$line" | tee -a temperature_log.csv; done
 ```
