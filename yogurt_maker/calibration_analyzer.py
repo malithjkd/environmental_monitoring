@@ -7,13 +7,14 @@ Post-processes calibration CSV data to compute:
   4. Generates diagnostic plots
 
 Usage:
-    python calibration_analyzer.py data/calibration/<run_dir>
+    python calibration_analyzer.py data/calibration/<run_dir> --ambient 28
 
 Outputs (saved to the same run directory):
   - thermal_parameters.json  (computed k_cool, power, PID constants)
   - calibration_plot.png     (heating + cooling curves with fits)
 """
 
+import argparse
 import csv
 import json
 import os
@@ -54,6 +55,11 @@ def compute_cooling_coefficient(elapsed, temps, phases, water_mass_kg, ambient_t
     Solution: T(t) = T_ambient + (T0 - T_ambient) × exp(-k_cool × t / (M × C))
 
     We fit the exponential decay to find k_cool.
+
+    IMPORTANT: After the relay turns off, heat stored in the cooker's heating
+    element continues transferring into the water (thermal soak). The
+    temperature may RISE for several minutes before true cooling begins.
+    We detect the peak temperature and start the fit from there.
     """
     # Extract cooling phase data
     cooling_mask = [p == "COOLING" for p in phases]
@@ -62,11 +68,26 @@ def compute_cooling_coefficient(elapsed, temps, phases, water_mass_kg, ambient_t
 
     if len(cooling_elapsed) < 10:
         print("Warning: Not enough cooling data points for reliable fit")
-        return 5.0, cooling_elapsed, cooling_temps  # Default
+        return 5.0, cooling_elapsed, cooling_temps, 0  # Default
 
     # Shift time to start at 0 for cooling phase
-    t = cooling_elapsed - cooling_elapsed[0]
-    T = cooling_temps
+    t_raw = cooling_elapsed - cooling_elapsed[0]
+    T_raw = cooling_temps
+
+    # --- Detect and skip thermal soak period ---
+    # Find the index of peak temperature (where actual cooling starts)
+    peak_idx = int(np.argmax(T_raw))
+    peak_temp = T_raw[peak_idx]
+    soak_duration_s = t_raw[peak_idx]
+
+    print(f"  Thermal soak detected: temp rose from {T_raw[0]:.1f}°C to "
+          f"{peak_temp:.1f}°C (+{peak_temp - T_raw[0]:.1f}°C) over "
+          f"{soak_duration_s:.0f}s ({soak_duration_s/60:.1f} min)")
+    print(f"  Fitting from peak ({peak_temp:.1f}°C) onwards...")
+
+    # Use data from peak onwards for the fit
+    t = t_raw[peak_idx:] - t_raw[peak_idx]  # Reset time to 0 at peak
+    T = T_raw[peak_idx:]
 
     # Newton's law: T(t) = T_amb + (T0 - T_amb) × exp(-t/τ)
     # where τ = M × C / k_cool
@@ -77,7 +98,7 @@ def compute_cooling_coefficient(elapsed, temps, phases, water_mass_kg, ambient_t
     valid = delta_T > 0.5  # At least 0.5°C above ambient
     if np.sum(valid) < 5:
         print("Warning: Temperature too close to ambient for reliable fit")
-        return 5.0, t, T
+        return 5.0, t, T, soak_duration_s
 
     t_valid = t[valid]
     delta_T_valid = delta_T[valid]
@@ -93,8 +114,9 @@ def compute_cooling_coefficient(elapsed, temps, phases, water_mass_kg, ambient_t
 
     print(f"  Thermal time constant (τ): {tau:.1f} s ({tau/60:.1f} min)")
     print(f"  Cooling coefficient (k_cool): {k_cool:.2f} W/°C")
+    print(f"  Ambient temp used: {ambient_temp}°C")
 
-    return k_cool, t, T
+    return k_cool, t, T, soak_duration_s
 
 
 def compute_effective_power(elapsed, temps, phases, water_mass_kg, k_cool, ambient_temp):
@@ -226,12 +248,24 @@ def generate_plots(
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python calibration_analyzer.py <calibration_run_dir>")
-        print("Example: python calibration_analyzer.py data/calibration/800w_multi_cooker_2026_08_03_10_00_00")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Analyze calibration data and compute thermal parameters."
+    )
+    parser.add_argument(
+        "run_dir",
+        help="Path to calibration run directory (e.g., data/calibration/800w_multi_cooker_...)"
+    )
+    parser.add_argument(
+        "--ambient", type=float, default=None,
+        help="Actual room ambient temperature in °C (default: from metadata or 28°C)"
+    )
+    parser.add_argument(
+        "--notes", type=str, default="",
+        help="Optional notes about test conditions (e.g., 'ceiling fan setting 1')"
+    )
+    args = parser.parse_args()
 
-    run_dir = sys.argv[1]
+    run_dir = args.run_dir
 
     # Load metadata
     metadata_path = os.path.join(run_dir, "metadata.json")
@@ -244,7 +278,14 @@ def main():
 
     water_mass_kg = metadata.get("water_mass_kg", metadata.get("water_volume_liters", 1.0))
     power_watts = metadata.get("power_watts", 800)
-    ambient_temp = 25.0  # Default; could be measured
+
+    # Ambient temp: CLI > metadata > default
+    if args.ambient is not None:
+        ambient_temp = args.ambient
+    elif "ambient_temp" in metadata:
+        ambient_temp = metadata["ambient_temp"]
+    else:
+        ambient_temp = 28.0  # Sensible default for tropical/warm rooms
 
     print(f"╔══════════════════════════════════════════════════╗")
     print(f"║  Calibration Analysis                           ║")
@@ -252,6 +293,11 @@ def main():
     print(f"║  Machine: {metadata.get('machine_name', '?'):<39}║")
     print(f"║  Power:   {power_watts}W{' ' * (37 - len(str(power_watts)))}║")
     print(f"║  Water:   {water_mass_kg}kg{' ' * (36 - len(str(water_mass_kg)))}║")
+    print(f"║  Ambient: {ambient_temp}°C{' ' * (35 - len(str(ambient_temp)))}║")
+    if args.notes:
+        # Truncate notes to fit the box
+        note_display = args.notes[:37]
+        print(f"║  Notes:   {note_display:<39}║")
     print(f"╚══════════════════════════════════════════════════╝")
 
     # Load CSV data
@@ -265,7 +311,7 @@ def main():
 
     # Compute cooling coefficient
     print("\n--- Cooling Analysis ---")
-    k_cool, cooling_t, cooling_T = compute_cooling_coefficient(
+    k_cool, cooling_t, cooling_T, soak_duration_s = compute_cooling_coefficient(
         elapsed, temps, phases, water_mass_kg, ambient_temp
     )
 
@@ -285,9 +331,11 @@ def main():
         "effective_power_watts": round(P_eff, 1),
         "rated_power_watts": power_watts,
         "water_mass_kg": water_mass_kg,
-        "ambient_temp_assumed": ambient_temp,
+        "ambient_temp": ambient_temp,
+        "thermal_soak_duration_s": round(soak_duration_s, 1),
         "thermal_time_constant_s": round(water_mass_kg * WATER_SPECIFIC_HEAT / k_cool, 1),
         "pid": pid_constants,
+        "notes": args.notes if args.notes else None,
     }
 
     results_path = os.path.join(run_dir, "thermal_parameters.json")
@@ -310,13 +358,18 @@ def main():
     print(f'  "k_cool": {results["k_cool"]},')
     print(f'  "pid": {json.dumps(pid_constants)}')
     print()
-    print("Feedforward duty at 42°C (ambient 25°C):")
+    print(f"Feedforward duty at 42°C (ambient {ambient_temp}°C):")
     duty_ff = k_cool * (42 - ambient_temp) / power_watts
     print(f"  {duty_ff:.4f} ({duty_ff*100:.1f}% → ON {duty_ff*30:.1f}s per 30s window)")
     print()
-    print("Feedforward duty at 85°C (ambient 25°C):")
+    print(f"Feedforward duty at 85°C (ambient {ambient_temp}°C):")
     duty_ff_85 = k_cool * (85 - ambient_temp) / power_watts
     print(f"  {duty_ff_85:.4f} ({duty_ff_85*100:.1f}% → ON {duty_ff_85*30:.1f}s per 30s window)")
+    print()
+    if soak_duration_s > 10:
+        print(f"⚠  Thermal soak: {soak_duration_s:.0f}s ({soak_duration_s/60:.1f} min) — "
+              f"the cooker's element retains significant heat after relay OFF.")
+        print(f"   The controller should anticipate this and cut power EARLY.")
 
 
 if __name__ == "__main__":
