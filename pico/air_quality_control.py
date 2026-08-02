@@ -127,12 +127,12 @@ def open_socket(ip):
     return connection
 
 
-def webpage(temperature, state, co2_value, dht22_temp, dht22_hum):
+def webpage(temperature, state, co2_value):
     #Template HTML
     
     # Format DHT22 values (handle None when sensor fails)
-    dht_temp_str = f"{dht22_temp} &deg;C" if dht22_temp is not None else "Sensor Error"
-    dht_hum_str = f"{dht22_hum} %" if dht22_hum is not None else "Sensor Error"
+    # dht_temp_str = f"{dht22_temp} &deg;C" if dht22_temp is not None else "Sensor Error"
+    # dht_hum_str = f"{dht22_hum} %" if dht22_hum is not None else "Sensor Error"
     
     html = f"""
             <!DOCTYPE html>
@@ -143,13 +143,9 @@ def webpage(temperature, state, co2_value, dht22_temp, dht22_hum):
             </head>
             <body>
             <h2>Environmental Monitor</h2>
-            
             <h3>Sensor Readings</h3>
-            <p><b>DHT22 Temperature:</b> {dht_temp_str}</p>
-            <p><b>DHT22 Humidity:</b> {dht_hum_str}</p>
             <p><b>Pico Internal Temp:</b> {temperature} &deg;C</p>
             <p><b>CO2 Value:</b> {co2_value} ppm</p>
-            
             <hr>
             <h3>Controls</h3>
             <p>LED is {state}</p>
@@ -242,7 +238,7 @@ def serve(connection):
         temperature = read_temperature_value()
         co2_value = read_co2_value()
         dht22_temp, dht22_hum = read_dht22()
-        html = webpage(temperature, state, co2_value, dht22_temp, dht22_hum)
+        html = webpage(temperature, state, co2_value)
         client.send(html)
         client.close()
 
