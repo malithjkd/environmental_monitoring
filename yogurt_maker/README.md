@@ -1,60 +1,129 @@
-# Yogurt Maker Temperature Controller
+# Smart Yogurt Maker
 
-This project is a temperature control system designed for making yogurt. It uses a Raspberry Pi Pico W to monitor the temperature using a DS18B20 sensor and controls a heating element via a relay. It also features a web interface for remote monitoring and a logging script to record temperature variations over time.
+A physics-informed temperature control system for making yogurt. Uses a Raspberry Pi Pico 2 W as an autonomous controller and a Raspberry Pi Zero 2W as the host server with a web dashboard.
+
+## Architecture
+
+```
+┌─────────────────────────────────────┐
+│  Raspberry Pi Zero 2W (Server)      │
+│  ┌────────────────────────────────┐ │
+│  │ FastAPI Web Server (port 8000) │ │
+│  │  - Web Dashboard               │ │
+│  │  - Script Generator            │ │
+│  │  - Serial Monitor & Logger     │ │
+│  └───────────┬────────────────────┘ │
+│              │ USB Serial            │
+└──────────────┼──────────────────────┘
+               │
+┌──────────────┼──────────────────────┐
+│  Raspberry Pi Pico 2 W (Controller) │
+│  ┌───────────┴────────────────────┐ │
+│  │ pico_controller.py (autonomous)│ │
+│  │  - Physics-Informed PID        │ │
+│  │  - Slow PWM via SSR            │ │
+│  │  - Multi-stage state machine   │ │
+│  └──────┬──────────────┬──────────┘ │
+│         │              │             │
+│    DS18B20 Sensor   SSR Relay        │
+│    (GPIO 3)         (GPIO 15)        │
+└──────────────────────────────────────┘
+```
 
 ## Hardware Requirements
 - **Microcontroller**: Raspberry Pi Pico 2 W
 - **Temperature Sensor**: DS18B20 (connected to GPIO 3)
-- **Relay Module**: Connected to GPIO 15 (controls the heater)
+- **Relay Module**: SSR (Solid State Relay) on GPIO 15
 - **Host Machine**: Raspberry Pi Zero 2 W
 
-## Target Temperature
-The controller is programmed to maintain the yogurt incubation temperature between **41.5°C and 42.5°C**.
-- If the temperature drops below 41.5°C, the heater turns ON.
-- If the temperature exceeds 42.5°C, the heater turns OFF.
+## Supported Machines
+| Machine | Power | Notes |
+|---------|-------|-------|
+| 800W Multi Cooker | 800W | High power, requires careful duty control |
+| 500W Rice Cooker (Warm Setting) | ~150W effective | Low power, gentle heating |
+| 800W Rice Cooker (Cook Setting) | 800W | Can exceed 100°C |
 
-## Features
-1. **Automated Heating**: Maintains optimal temperature range for yogurt fermentation.
-2. **Web Dashboard**: Hosts a lightweight web server on the Pico W to display real-time temperature and relay status.
-3. **Data Logging**: Includes a host-side Python script to capture and log temperature variations with timestamps into a CSV file.
+## Yogurt Making Process (Multi-Stage)
 
-## Files
-- `temperature_controller.py`: The main MicroPython script that runs on the Raspberry Pi Pico W. Handles sensor reading, relay control, and the web server.
-- `secrets.py`: Stores the WiFi SSID and password for the Pico W.
-- `run_and_log.py`: A Python script intended to be run on the host machine (e.g., Raspberry Pi Zero). It starts the Pico via `mpremote` and logs the serial output (with generated timestamps) to `temperature_log.csv`.
+1. **PASTEURIZE** — Heat milk to 85°C (controlled ramp)
+2. **HOLD_85** — Hold at 85°C for 5 minutes
+3. **COOL_DOWN** — Heater OFF, passive cooling to ~43°C
+4. **FERMENT** — Hold at 42°C ± 0.5°C for 6–12 hours
+5. **DONE** — Heater OFF, process complete
 
-## Usage
+## Control Strategy
 
-### 1. Setup WiFi
-Ensure your `secrets.py` file is configured with your local WiFi credentials:
-```python
-WIFI_NETWORKS = [
-    {'ssid': 'YOUR_WIFI_NAME', 'password': 'YOUR_WIFI_PASSWORD'}
-]
-```
+The system uses a **physics-informed PID** controller:
 
-### 2. Running and Logging
-To start the controller and begin logging data to a CSV file, connect the Pico to your Raspberry Pi Zero via USB, navigate to this directory, and run the wrapper script:
+- **Feedforward**: Calculates the steady-state duty cycle from the thermal energy balance:
+  `duty = k_cool × (T_target − T_ambient) / P`
+- **PID Feedback**: Provides correction for disturbances and transients
+- **Slow PWM**: Converts the 0–100% duty cycle into ON/OFF switching within a 30-second window via the SSR
 
+The thermal model parameters (`k_cool`, effective power) are determined through calibration tests for each machine and water volume.
+
+## Project Files
+
+### Core
+| File | Runs On | Description |
+|------|---------|-------------|
+| `pico_template.py` | — | MicroPython template with `{{CONFIG}}` markers |
+| `server.py` | Pi Zero 2W | FastAPI server, script generator, serial monitor |
+| `config.json` | Pi Zero 2W | Machine profiles with PID & thermal constants |
+
+### Calibration
+| File | Runs On | Description |
+|------|---------|-------------|
+| `calibration_test.py` | Pico W | Heating/cooling test for thermal parameter ID |
+| `calibration_runner.py` | Pi Zero 2W | Deploys calibration test and captures data |
+| `calibration_analyzer.py` | Mac/Pi | Computes `k_cool`, suggests PID constants, plots |
+
+### Dashboard
+| File | Description |
+|------|-------------|
+| `static/index.html` | Web dashboard |
+| `static/style.css` | Dark theme with glassmorphism |
+| `static/app.js` | SSE real-time updates, Chart.js charting |
+
+### Utilities
+| File | Runs On | Description |
+|------|---------|-------------|
+| `run_and_log.py` | Pi Zero 2W | Standalone logger (mpremote + CSV) |
+| `plot_temperature.py` | Mac | Matplotlib plotting |
+
+## Quick Start
+
+### 1. Calibrate a Machine
 ```bash
+# On Pi Zero 2W
 cd ~/environmental_monitoring/yogurt_maker
-python run_and_log.py
+source ../.venv/bin/activate
+python calibration_runner.py --machine 800w_multi_cooker --volume 1.5
+
+# On Mac (analysis + plotting)
+python calibration_analyzer.py data/calibration/<run_dir>
 ```
 
-*Note: Do not run `mpremote run temperature_controller.py` in a separate terminal while the logger is running, as they will conflict over the USB serial port.*
+### 2. Update config.json
+Copy the `k_cool` and `pid` values from `thermal_parameters.json` into `config.json`.
 
-### 3. Web Monitoring
-When the script starts, it will print an IP address to the terminal (e.g., `Listening on http://192.168.1.x`). Open this IP address in any web browser on the same network to view the live dashboard.
-
-
-
-### 4. Copy log file
-
+### 3. Start the Server
 ```bash
-scp malithjkd@pizero2:~/environmental_monitoring/pico/temperature_log.csv /Users/malithjkd1/Documents/environmental_monitoring/pico/
+# On Pi Zero 2W
+cd ~/environmental_monitoring/yogurt_maker
+source ../.venv/bin/activate
+pip install -r requirements.txt
+python server.py
 ```
 
-### 5. Yourget types and  temperature requirements
+### 4. Open the Dashboard
+Navigate to `http://<pi-zero-ip>:8000` in your browser. Select the machine, enter the water volume, and click **Start Process**.
 
+### 5. Copy Data for Analysis
+```bash
+scp -r malithjkd@pizero2:~/environmental_monitoring/yogurt_maker/data/ \
+    /Users/malithjkd1/Documents/environmental_monitoring/yogurt_maker/data/
+```
+
+## Yogurt Starter Reference
 https://yogourmet.com/en/canada/product-details/mild-yogurt-starter/
-

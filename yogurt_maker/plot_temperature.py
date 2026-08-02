@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import matplotlib.dates as mdates
 
-csv_filename = 'temperature_log.csv'
+csv_filename = 'data/2026_08_02_17_17_34/temperature_log.csv'
 
 timestamps = []
 temperatures = []
@@ -76,7 +76,7 @@ plt.title('Yogurt Maker Temperature Variation and Relay State')
 fig.tight_layout()
 
 # Save plot as simple_plot.png
-output_filename = 'simple_plot.png'
+output_filename = 'data/2026_08_02_17_17_34/plot.png'
 plt.savefig(output_filename, dpi=300)
 plt.show()
 print(f"Plot successfully saved as {output_filename}")

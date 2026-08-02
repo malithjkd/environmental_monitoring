@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Yogurt Maker — Dashboard</title>
+    <meta name="description" content="Real-time monitoring and control dashboard for the Smart Yogurt Maker with physics-informed PID temperature control.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🥛</span>
+                <h1>Smart Yogurt Maker</h1>
+            </div>
+            <div class="connection-badge" id="connectionBadge">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="connectionText">Disconnected</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- Stage Progress Bar -->
+        <section class="stage-progress-card" id="stageProgressCard">
+            <div class="stage-bar">
+                <div class="stage-step" data-stage="PASTEURIZE" id="stage-PASTEURIZE">
+                    <div class="stage-icon">🔥</div>
+                    <div class="stage-label">Pasteurize</div>
+                    <div class="stage-detail">Heat to 85°C</div>
+                </div>
+                <div class="stage-connector"></div>
+                <div class="stage-step" data-stage="HOLD_85" id="stage-HOLD_85">
+                    <div class="stage-icon">⏱️</div>
+                    <div class="stage-label">Hold 85°C</div>
+                    <div class="stage-detail">5 minutes</div>
+                </div>
+                <div class="stage-connector"></div>
+                <div class="stage-step" data-stage="COOL_DOWN" id="stage-COOL_DOWN">
+                    <div class="stage-icon">❄️</div>
+                    <div class="stage-label">Cool Down</div>
+                    <div class="stage-detail">To ~43°C</div>
+                </div>
+                <div class="stage-connector"></div>
+                <div class="stage-step" data-stage="FERMENT" id="stage-FERMENT">
+                    <div class="stage-icon">🧫</div>
+                    <div class="stage-label">Ferment</div>
+                    <div class="stage-detail">42°C ± 0.5°C</div>
+                </div>
+                <div class="stage-connector"></div>
+                <div class="stage-step" data-stage="DONE" id="stage-DONE">
+                    <div class="stage-icon">✅</div>
+                    <div class="stage-label">Done</div>
+                    <div class="stage-detail">Complete</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Row: Status Cards -->
+        <section class="metrics-row">
+            <div class="metric-card temperature-card">
+                <div class="metric-header">
+                    <span class="metric-icon">🌡️</span>
+                    <span class="metric-title">Temperature</span>
+                </div>
+                <div class="metric-value" id="currentTemp">--.-</div>
+                <div class="metric-unit">°C</div>
+                <div class="metric-sub">
+                    Target: <span id="targetTemp">--.-</span>°C
+                </div>
+            </div>
+
+            <div class="metric-card duty-card">
+                <div class="metric-header">
+                    <span class="metric-icon">⚡</span>
+                    <span class="metric-title">Heater Power</span>
+                </div>
+                <div class="metric-value" id="dutyPercent">--</div>
+                <div class="metric-unit">%</div>
+                <div class="duty-bar-container">
+                    <div class="duty-bar" id="dutyBar"></div>
+                </div>
+                <div class="metric-sub">
+                    Relay: <span id="relayState" class="relay-off">OFF</span>
+                </div>
+            </div>
+
+            <div class="metric-card stage-card">
+                <div class="metric-header">
+                    <span class="metric-icon">📊</span>
+                    <span class="metric-title">Current Stage</span>
+                </div>
+                <div class="metric-value stage-name" id="currentStage">IDLE</div>
+                <div class="metric-sub">
+                    Elapsed: <span id="stageElapsed">00:00:00</span>
+                </div>
+                <div class="metric-sub">
+                    Total: <span id="totalElapsed">00:00:00</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Temperature Chart -->
+        <section class="chart-card">
+            <div class="chart-header">
+                <h2>Temperature History</h2>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-color" style="background:#ff5722"></span>Temperature</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#4caf50"></span>Setpoint</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#2196f3"></span>Duty Cycle</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="tempChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <h2>Control Panel</h2>
+            <div class="control-grid">
+                <div class="control-group">
+                    <label for="machineSelect">Machine</label>
+                    <select id="machineSelect">
+                        <option value="">Loading machines...</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="waterVolume">Water Volume (L)</label>
+                    <input type="number" id="waterVolume" value="1.5" min="0.5" max="10" step="0.1">
+                </div>
+
+                <div class="control-group">
+                    <label for="pasteurizeTemp">Pasteurize Temp (°C)</label>
+                    <input type="number" id="pasteurizeTemp" value="85" min="70" max="95" step="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="holdDuration">Hold @ 85°C (min)</label>
+                    <input type="number" id="holdDuration" value="5" min="1" max="30" step="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="fermentTemp">Ferment Temp (°C)</label>
+                    <input type="number" id="fermentTemp" value="42" min="35" max="50" step="0.5">
+                </div>
+
+                <div class="control-group">
+                    <label for="fermentDuration">Ferment Duration (hrs)</label>
+                    <input type="number" id="fermentDuration" value="8" min="1" max="24" step="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="ambientTemp">Ambient Temp (°C)</label>
+                    <input type="number" id="ambientTemp" value="25" min="10" max="40" step="1">
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-start" id="btnStart" onclick="startProcess()">
+                    ▶ Start Process
+                </button>
+                <button class="btn btn-stop" id="btnStop" onclick="stopProcess()" disabled>
+                    ⏹ Emergency Stop
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Smart Yogurt Maker v1.0 — Physics-Informed PID Control</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+/* ============================================================
+   Smart Yogurt Maker — Dashboard Stylesheet
+   Premium dark theme with warm accents and glassmorphism
+   ============================================================ */
+
+:root {
+    /* Color palette */
+    --bg-primary: #0a0a14;
+    --bg-secondary: #12121e;
+    --bg-card: rgba(20, 20, 35, 0.85);
+    --bg-card-hover: rgba(28, 28, 48, 0.9);
+    --border-card: rgba(255, 255, 255, 0.06);
+
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a0;
+    --text-muted: #555570;
+
+    /* Accent colors */
+    --accent-warm: #ff5722;
+    --accent-orange: #ff9800;
+    --accent-amber: #ffc107;
+    --accent-green: #4caf50;
+    --accent-blue: #2196f3;
+    --accent-red: #f44336;
+    --accent-purple: #9c27b0;
+
+    /* Gradients */
+    --gradient-warm: linear-gradient(135deg, #ff5722, #ff9800);
+    --gradient-cool: linear-gradient(135deg, #2196f3, #00bcd4);
+    --gradient-green: linear-gradient(135deg, #4caf50, #8bc34a);
+    --gradient-danger: linear-gradient(135deg, #f44336, #ff5722);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+    --shadow-glow-warm: 0 0 20px rgba(255, 87, 34, 0.2);
+    --shadow-glow-green: 0 0 20px rgba(76, 175, 80, 0.2);
+
+    /* Spacing */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.5;
+    background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(255, 87, 34, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(33, 150, 243, 0.04) 0%, transparent 50%);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-card);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+}
+
+.logo h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.connection-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-card);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-red);
+    transition: background 0.3s;
+}
+
+.status-dot.connected {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ============================================================
+   Dashboard Layout
+   ============================================================ */
+.dashboard {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ============================================================
+   Stage Progress Bar
+   ============================================================ */
+.stage-progress-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+    backdrop-filter: blur(12px);
+    overflow-x: auto;
+}
+
+.stage-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-width: 600px;
+}
+
+.stage-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    transition: all 0.4s ease;
+    opacity: 0.35;
+    min-width: 100px;
+}
+
+.stage-step.active {
+    opacity: 1;
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    box-shadow: var(--shadow-glow-warm);
+    transform: scale(1.05);
+}
+
+.stage-step.completed {
+    opacity: 0.7;
+}
+
+.stage-step.completed .stage-icon {
+    filter: grayscale(0.3);
+}
+
+.stage-icon {
+    font-size: 1.6rem;
+}
+
+.stage-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+}
+
+.stage-detail {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+.stage-connector {
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Metrics Cards
+   ============================================================ */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.metric-icon {
+    font-size: 1.1rem;
+}
+
+.metric-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-value {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+}
+
+.temperature-card .metric-value {
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.duty-card .metric-value {
+    color: var(--accent-amber);
+}
+
+.stage-card .metric-value {
+    font-size: 1.6rem;
+    color: var(--accent-orange);
+}
+
+.metric-unit {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.metric-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.metric-sub span {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Duty cycle bar */
+.duty-bar-container {
+    margin-top: 12px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.duty-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--gradient-warm);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Relay state */
+.relay-on {
+    color: var(--accent-green) !important;
+    font-weight: 600 !important;
+}
+
+.relay-off {
+    color: var(--text-muted) !important;
+}
+
+/* ============================================================
+   Chart
+   ============================================================ */
+.chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    backdrop-filter: blur(12px);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.chart-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.chart-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legend-color {
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+}
+
+.chart-container {
+    position: relative;
+    height: 360px;
+}
+
+/* ============================================================
+   Control Panel
+   ============================================================ */
+.control-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    backdrop-filter: blur(12px);
+}
+
+.control-panel h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-group label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.control-group select,
+.control-group input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.control-group select:focus,
+.control-group input:focus {
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.15);
+}
+
+.control-group select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Buttons */
+.button-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-start {
+    background: var(--gradient-green);
+    color: white;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.btn-start:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(76, 175, 80, 0.4);
+}
+
+.btn-stop {
+    background: var(--gradient-danger);
+    color: white;
+    box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3);
+}
+
+.btn-stop:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(244, 67, 54, 0.4);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 16px;
+        gap: 14px;
+    }
+
+    .metrics-row {
+        grid-template-columns: 1fr;
+    }
+
+    .control-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 260px;
+    }
+
+    .metric-value {
+        font-size: 2.2rem;
+    }
+
+    .stage-bar {
+        justify-content: flex-start;
+    }
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.metric-card,
+.chart-card,
+.control-panel,
+.stage-progress-card {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.metrics-row .metric-card:nth-child(1) { animation-delay: 0.05s; }
+.metrics-row .metric-card:nth-child(2) { animation-delay: 0.1s; }
+.metrics-row .metric-card:nth-child(3) { animation-delay: 0.15s; }
+.chart-card { animation-delay: 0.2s; }
+.control-panel { animation-delay: 0.25s; }

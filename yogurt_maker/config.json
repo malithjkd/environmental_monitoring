@@ -1,0 +1,40 @@
+{
+    "machines": {
+        "800w_multi_cooker": {
+            "name": "800W Multi Cooker",
+            "power_watts": 800,
+            "k_cool": 5.0,
+            "pid": { "kp": 0.01, "ki": 0.0001, "kd": 0.0 },
+            "pwm_window_s": 30,
+            "notes": "High power, large overshoot risk. k_cool and PID are defaults — calibrate before use."
+        },
+        "500w_rice_cooker_warm": {
+            "name": "500W Rice Cooker (Warm Setting)",
+            "power_watts": 150,
+            "k_cool": 3.0,
+            "pid": { "kp": 0.02, "ki": 0.0002, "kd": 0.0 },
+            "pwm_window_s": 30,
+            "notes": "Warm mode estimated at ~150W effective. k_cool and PID are defaults — calibrate before use."
+        },
+        "800w_rice_cooker_cook": {
+            "name": "800W Rice Cooker (Cook Setting)",
+            "power_watts": 800,
+            "k_cool": 5.0,
+            "pid": { "kp": 0.01, "ki": 0.0001, "kd": 0.0 },
+            "pwm_window_s": 30,
+            "notes": "Full power cook mode, can exceed 100C. k_cool and PID are defaults — calibrate before use."
+        }
+    },
+    "defaults": {
+        "pasteurize_temp": 85.0,
+        "pasteurize_tolerance": 1.0,
+        "hold_85_duration_s": 300,
+        "ferment_temp": 42.0,
+        "ferment_tolerance": 0.5,
+        "ferment_duration_s": 28800,
+        "ambient_temp": 25.0,
+        "safety_max_temp": 95.0,
+        "sensor_pin": 3,
+        "relay_pin": 15
+    }
+}
