@@ -1,3 +1,8 @@
 # Ignore the secrets file containing WiFi passwords
 pico/secrets.py
 secrets.py
+.venv
+.csv
+yougurt_maker/data/
+yogurt_maker/data/
+simple_plot.png

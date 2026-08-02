@@ -45,3 +45,9 @@ python run_and_log.py
 
 ### 3. Web Monitoring
 When the script starts, it will print an IP address to the terminal (e.g., `Listening on http://192.168.1.x`). Open this IP address in any web browser on the same network to view the live dashboard.
+
+
+
+#### Copy log file
+
+scp malithjkd@pizero2:~/environmental_monitoring/pico/temperature_log.csv /Users/malithjkd1/Documents/environmental_monitoring/pico/

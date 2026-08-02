@@ -2,13 +2,40 @@ import subprocess
 import datetime
 import sys
 import re
+import os
+import json
 
-csv_filename = 'temperature_log.csv'
+# Create data directory if it doesn't exist
+data_dir = 'data'
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
 
-print(f"Starting Pico and logging data to {csv_filename}...")
+# Create a timestamped folder for this specific run
+run_timestamp = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+run_dir = os.path.join(data_dir, run_timestamp)
+os.makedirs(run_dir)
 
-# Open the CSV file in append mode
-with open(csv_filename, 'a') as f:
+csv_filename = os.path.join(run_dir, 'temperature_log.csv')
+connection_log_filename = os.path.join(run_dir, 'connection_status.log')
+metadata_filename = os.path.join(run_dir, 'metadata.json')
+
+# Create and write metadata.json with some default test settings
+metadata = {
+    "test_name": "Yogurt Maker Temperature Run",
+    "timestamp": run_timestamp,
+    "target_temperature_C": 42.0,  # You can adjust these
+    "sensor_type": "DS18B20",
+    "relay_pin": 15,
+    "sensor_pin": 3
+}
+
+with open(metadata_filename, 'w') as mf:
+    json.dump(metadata, mf, indent=4)
+
+print(f"Starting Pico and logging data to {run_dir}/...")
+
+# Open the CSV file and Connection log file in append mode
+with open(csv_filename, 'a') as f, open(connection_log_filename, 'a') as conn_log:
     # Write CSV header
     f.write("Timestamp,Temperature_C,Relay_State\n") 
     
@@ -29,6 +56,10 @@ with open(csv_filename, 'a') as f:
             sys.stdout.write(line)
             sys.stdout.flush()
             
+            # Log all output to connection status log
+            conn_log.write(line)
+            conn_log.flush()
+            
             # Check if the line contains temperature data
             # Example line from Pico: "Temp: 41.50C, Relay: ON"
             if "Temp:" in line and "Relay:" in line:
@@ -43,6 +74,6 @@ with open(csv_filename, 'a') as f:
                     f.flush() # Ensure it writes to the file immediately
                     
     except KeyboardInterrupt:
-        print("\nStopping logger...")
+        print(f"\nStopping logger... Data saved in {run_dir}")
         process.terminate()
         sys.exit(0)
