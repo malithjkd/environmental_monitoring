@@ -41,18 +41,6 @@ def read_temperature_value():
     temperature = 27 - (volt - 0.706)/0.001721
     return round(temperature, 1)
 
-def read_dht22():
-    """Read temperature and humidity from DHT22 sensor with retry."""
-    for attempt in range(3):
-        try:
-            dht22_sensor.measure()
-            temp = dht22_sensor.temperature()
-            hum = dht22_sensor.humidity()
-            return round(temp, 1), round(hum, 1)
-        except Exception as e:
-            print(f"DHT22 read error (attempt {attempt+1}/3):", e)
-            utime.sleep_ms(2000)  # DHT22 needs min 2s between reads
-    return None, None
 
 def read_co2_value():
     uart.write(b"\xFE\x44\x00\x08\x02\x9F\x25")
@@ -237,7 +225,6 @@ def serve(connection):
             state = 'DIO 2 Blinked'
         temperature = read_temperature_value()
         co2_value = read_co2_value()
-        dht22_temp, dht22_hum = read_dht22()
         html = webpage(temperature, state, co2_value)
         client.send(html)
         client.close()
