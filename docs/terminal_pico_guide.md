@@ -152,6 +152,23 @@ mpremote run pico/air_quality_control.py
 mpremote run pico/CO2_data_host_sensorair_http.py
 ```
 
+### Step 4: Run a File Already Saved on the Pico and View Output
+If the file is already on the Pico, you don't use `mpremote run`. 
+
+**Scenario A: Running `main.py`**
+If you copied your script as `main.py` (which runs automatically on boot), you can copy it, reset the Pico, and immediately watch its output:
+```bash
+mpremote cp pico/air_quality_control.py :main.py
+mpremote reset repl
+```
+*(Press `Ctrl + ]` to exit the console when done).*
+
+**Scenario B: Running a differently named file**
+If you saved a script with a different name (e.g., `my_script.py`), you can execute it via the Python `import` command using `mpremote exec`:
+```bash
+mpremote exec "import my_script"
+```
+
 ---
 
 ## 4. Option B: Using `rshell` (Interactive Remote Shell)
@@ -256,3 +273,11 @@ Since your project uses `network` for Wi-Fi, you have a **Raspberry Pi Pico W**.
    ```
 
 *The Pico W will automatically reboot. Within a few seconds, it will start up running MicroPython and will reappear as `/dev/ttyACM0`!*
+
+
+
+
+# yoget maker tesing
+```bash
+mpremote run temperature_controller.py | while read line; do echo "$(date +'%Y-%m-%d %H:%M:%S'),$line" | tee -a temperature_log.csv; done
+```
