@@ -42,7 +42,7 @@ with open(csv_filename, 'a') as f, open(connection_log_filename, 'a') as conn_lo
     # Run the mpremote command
     # bufsize=1 ensures line-buffered output
     process = subprocess.Popen(
-        ['mpremote', 'run', 'temperature_controller.py'],
+        ['mpremote', 'run', 'set_point_based_temp_control.py'],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
