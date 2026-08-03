@@ -29,7 +29,7 @@ def read_co2_value():
 def main():
     print("CO2 USB Sender started.")
     print("Waiting for sensor to warm up...")
-    utime.sleep(2)
+    utime.sleep(7)
     
     while True:
         pico_led.on()
@@ -42,7 +42,7 @@ def main():
         else:
             print("CO2:ERROR")
             
-        utime.sleep(2) # 2 seconds between readings, +3s reading time = ~5s total loop
+        utime.sleep(12) # 2 seconds between readings, +3s reading time = ~15s total loop
 
 if __name__ == '__main__':
     try:
