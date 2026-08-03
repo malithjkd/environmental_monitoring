@@ -46,7 +46,9 @@ def read_serial_data():
             while running:
                 if ser.in_waiting > 0:
                     try:
-                        line = ser.readline().decode('utf-8').strip()
+                        line = ser.readline().decode('utf-8', errors='ignore').strip()
+                        if line:
+                            print(f"Pico says: {line}")
                         if line.startswith("CO2:"):
                             val_str = line.split(":")[1]
                             if val_str != "ERROR":
