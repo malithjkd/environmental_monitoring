@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO2 Monitor Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="alert-banner" class="alert-banner hidden">
+        WARNING: CO2 Levels are Too High! (>800 ppm) Please ventilate the room.
+    </div>
+
+    <div class="dashboard-container">
+        <header>
+            <h1>Air Quality Monitor</h1>
+            <p>Live CO2 Tracking</p>
+        </header>
+
+        <main>
+            <div class="current-reading-card">
+                <h2>Current CO2</h2>
+                <div class="value-display">
+                    <span id="current-co2-val">--</span> <span class="unit">ppm</span>
+                </div>
+                <div id="status-indicator" class="status-indicator">
+                    <span class="dot"></span> <span id="status-text">Connecting...</span>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Historical Trend</h2>
+                <div class="chart-container">
+                    <canvas id="co2Chart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('co2Chart').getContext('2d');
+        let co2Chart;
+
+        // Initialize empty chart
+        function initChart() {
+            co2Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CO2 Level (ppm)',
+                        data: [],
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#4ade80',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                color: '#94a3b8',
+                                maxTicksLimit: 10
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 0 // Disable animation for live updates
+                    }
+                }
+            });
+        }
+
+        function updateDashboard(data) {
+            // Update current value
+            const currentValEl = document.getElementById('current-co2-val');
+            const alertBanner = document.getElementById('alert-banner');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const dot = statusIndicator.querySelector('.dot');
+
+            if (data.current_co2 !== null) {
+                currentValEl.textContent = data.current_co2;
+                
+                // Status checking
+                if (data.current_co2 > data.alert_threshold) {
+                    alertBanner.classList.remove('hidden');
+                    dot.style.backgroundColor = '#ef4444'; // Red
+                    statusText.textContent = 'Poor Air Quality';
+                    co2Chart.data.datasets[0].borderColor = '#ef4444';
+                    co2Chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                    co2Chart.data.datasets[0].pointBackgroundColor = '#ef4444';
+                } else {
+                    alertBanner.classList.add('hidden');
+                    dot.style.backgroundColor = '#4ade80'; // Green
+                    statusText.textContent = 'Good Air Quality';
+                    co2Chart.data.datasets[0].borderColor = '#4ade80';
+                    co2Chart.data.datasets[0].backgroundColor = 'rgba(74, 222, 128, 0.1)';
+                    co2Chart.data.datasets[0].pointBackgroundColor = '#4ade80';
+                }
+            }
+
+            // Update chart
+            if (data.history && data.history.length > 0) {
+                const labels = data.history.map(item => {
+                    // Extract just the time part for cleaner x-axis
+                    return item.timestamp.split(' ')[1];
+                });
+                const values = data.history.map(item => item.co2);
+                
+                co2Chart.data.labels = labels;
+                co2Chart.data.datasets[0].data = values;
+                co2Chart.update();
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            }
+        }
+
+        // Initialize and start polling
+        initChart();
+        fetchData();
+        setInterval(fetchData, 2000); // Fetch every 2 seconds
+    </script>
+</body>
+</html>

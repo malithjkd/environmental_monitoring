@@ -31,9 +31,6 @@ pico_led.off()
 relay_1.off()
 relay_2.off()
 
-# DHT22 needs ~2 seconds after power-on before first read
-print("Waiting for DHT22 warm-up...")
-utime.sleep_ms(2000)
 
 def read_temperature_value():
     adc_value = sensor.read_u16()
