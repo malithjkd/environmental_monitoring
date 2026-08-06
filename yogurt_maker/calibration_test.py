@@ -24,7 +24,7 @@ COOLING_TARGET_C = 40.0       # Stop cooling at this temperature
 COOLING_TIMEOUT_S = 7200      # Max 2 hours cooling (porcelain retains heat)
 SAMPLE_INTERVAL_MS = 2000     # Sample every 2 seconds
 SENSOR_PIN = 3
-RELAY_PIN = 15
+RELAY_PIN = 13
 # ===== END PARAMETERS =====
 
 # Hardware setup
