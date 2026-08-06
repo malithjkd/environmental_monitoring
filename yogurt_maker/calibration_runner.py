@@ -31,28 +31,43 @@ def parse_args():
         help="Machine being tested"
     )
     parser.add_argument(
-        "--volume",
+        "--milk-volume",
         type=float,
-        required=True,
-        help="Water volume in liters"
+        default=0.25,
+        help="Milk (or dummy water) volume in liters (default: 0.25L)"
+    )
+    parser.add_argument(
+        "--water-bath-volume",
+        type=float,
+        default=1.75,
+        help="Water bath volume in liters (default: 1.75L)"
+    )
+    parser.add_argument(
+        "--pot-type",
+        type=str,
+        default="porcelain",
+        help="Type of pot used (e.g., porcelain_250ml, glass_500ml, None)"
     )
     parser.add_argument(
         "--heating-target",
         type=float,
-        default=75.0,
-        help="Stop heating at this temperature (default: 75°C)"
+        default=55.0,
+        help="Stop heating at this temperature (default: 55°C)"
     )
     parser.add_argument(
         "--cooling-target",
         type=float,
-        default=35.0,
-        help="Stop cooling at this temperature (default: 35°C)"
+        default=40.0,
+        help="Stop cooling at this temperature (default: 40°C)"
     )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    # Total volume calculation
+    total_volume = args.milk_volume + args.water_bath_volume
 
     # Load machine config
     with open("config.json", "r") as f:
@@ -78,8 +93,11 @@ def main():
         "machine": args.machine,
         "machine_name": machine_config["name"],
         "power_watts": machine_config["power_watts"],
-        "water_volume_liters": args.volume,
-        "water_mass_kg": args.volume,  # 1L water ≈ 1kg
+        "milk_volume_liters": args.milk_volume,
+        "water_bath_volume_liters": args.water_bath_volume,
+        "total_water_volume_liters": total_volume,
+        "total_water_mass_kg": total_volume,  # 1L water ≈ 1kg
+        "pot_type": args.pot_type,
         "heating_target_c": args.heating_target,
         "cooling_target_c": args.cooling_target,
         "timestamp": timestamp,
@@ -92,7 +110,7 @@ def main():
     print(f"╠══════════════════════════════════════════════════╣")
     print(f"║  Machine: {machine_config['name']:<39}║")
     print(f"║  Power:   {machine_config['power_watts']}W{' ' * (37 - len(str(machine_config['power_watts'])))}║")
-    print(f"║  Volume:  {args.volume}L{' ' * (37 - len(str(args.volume)))}║")
+    print(f"║  Volume:  {total_volume}L{' ' * (37 - len(str(total_volume)))}║")
     print(f"║  Heating target: {args.heating_target}°C{' ' * (29 - len(str(args.heating_target)))}║")
     print(f"║  Cooling target: {args.cooling_target}°C{' ' * (29 - len(str(args.cooling_target)))}║")
     print(f"║  Output:  {run_dir:<39}║")

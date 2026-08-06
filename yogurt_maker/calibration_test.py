@@ -18,10 +18,10 @@ import utime
 
 # ===== CALIBRATION PARAMETERS =====
 # These can be adjusted by the calibration_runner before deployment
-HEATING_TARGET_C = 75.0       # Stop heating at this temperature
-HEATING_TIMEOUT_S = 600       # Max 10 minutes heating
-COOLING_TARGET_C = 35.0       # Stop cooling at this temperature
-COOLING_TIMEOUT_S = 1800      # Max 30 minutes cooling
+HEATING_TARGET_C = 55.0       # Stop heating at this temperature (lowered for porcelain lag)
+HEATING_TIMEOUT_S = 2400      # Max 40 minutes heating (porcelain heats slower)
+COOLING_TARGET_C = 40.0       # Stop cooling at this temperature
+COOLING_TIMEOUT_S = 7200      # Max 2 hours cooling (porcelain retains heat)
 SAMPLE_INTERVAL_MS = 2000     # Sample every 2 seconds
 SENSOR_PIN = 3
 RELAY_PIN = 15
