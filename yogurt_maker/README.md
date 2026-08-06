@@ -94,12 +94,32 @@ The thermal model parameters (`k_cool`, effective power) are determined through 
 ## Quick Start
 
 ### 1. Calibrate a Machine
+To ensure the long calibration test isn't interrupted if your SSH connection drops, use `tmux`.
+
 ```bash
 # On Pi Zero 2W
+# 1. Start a new tmux session
+tmux new -s ym_session
+
+# 2. Activate virtual environment and run the test
 cd ~/environmental_monitoring/yogurt_maker
 source ../.venv/bin/activate
-python calibration_runner.py --machine 800w_multi_cooker --volume 1.5
+python calibration_runner.py --machine 800w_multi_cooker --milk-volume 0.25 --water-bath-volume 1.75 --pot-type porcelain_250ml
 
+# 3. Detach from the session to leave it running in the background:
+# Press mac key or control + B, then let go and press D
+```
+
+To check on the running session later or if you disconnect:
+```bash
+# List active tmux sessions
+tmux ls
+
+# Reattach to the yogurt maker session
+tmux attach -t ym_session
+```
+
+```bash
 # On Mac (analysis + plotting)
 python calibration_analyzer.py data/calibration/<run_dir>
 ```
