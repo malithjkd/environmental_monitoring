@@ -122,6 +122,7 @@ tmux attach -t ym_session
 ```bash
 # On Mac (analysis + plotting)
 python calibration_analyzer.py data/calibration/<run_dir>
+python calibration_analyzer.py data/calibration/800w_multi_cooker_2026_08_07_19_06_32
 ```
 
 ### 2. Update config.json

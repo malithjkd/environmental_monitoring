@@ -3,8 +3,8 @@
         "800w_multi_cooker": {
             "name": "800W Multi Cooker",
             "power_watts": 800,
-            "k_cool": 5.0,
-            "pid": { "kp": 0.01, "ki": 0.0001, "kd": 0.0 },
+            "k_cool": 0.839,
+            "pid": { "kp": 0.001048, "ki": 3e-08, "kd": 0.0 },
             "pwm_window_s": 30,
             "notes": "High power, large overshoot risk. k_cool and PID are defaults — calibrate before use."
         },

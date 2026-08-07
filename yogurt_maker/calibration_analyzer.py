@@ -276,7 +276,10 @@ def main():
     with open(metadata_path) as f:
         metadata = json.load(f)
 
-    water_mass_kg = metadata.get("water_mass_kg", metadata.get("water_volume_liters", 1.0))
+    water_mass_kg = metadata.get(
+        "total_water_mass_kg", 
+        metadata.get("total_water_volume_liters", metadata.get("water_mass_kg", metadata.get("water_volume_liters", 1.0)))
+    )
     power_watts = metadata.get("power_watts", 800)
 
     # Ambient temp: CLI > metadata > default
