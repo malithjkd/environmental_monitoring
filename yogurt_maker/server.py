@@ -95,7 +95,7 @@ class PicoManager:
             "ferment_duration_s": user_config.get("ferment_duration_s", 28800),
             "safety_max_temp": user_config.get("safety_max_temp", 95.0),
             "sensor_pin": user_config.get("sensor_pin", 3),
-            "relay_pin": user_config.get("relay_pin", 15),
+            "relay_pin": user_config.get("relay_pin", 12),
         }
 
         # Replace the CONFIG block between markers
