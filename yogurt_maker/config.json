@@ -35,6 +35,6 @@
         "ambient_temp": 25.0,
         "safety_max_temp": 95.0,
         "sensor_pin": 3,
-        "relay_pin": 15
+        "relay_pin": 12
     }
 }
