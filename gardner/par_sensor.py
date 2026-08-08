@@ -28,6 +28,12 @@ class RS485Serial(serial.Serial):
         self.flush()         # Wait until all data is written to OS buffer
         self.tx_enable.off() # Switch back to RX IMMEDIATELY
         return res
+        
+    def close(self):
+        """Release the GPIO pin when the serial port is closed."""
+        if hasattr(self, 'tx_enable') and self.tx_enable is not None:
+            self.tx_enable.close()
+        super().close()
 
 
 # --- CONFIGURATION ---
@@ -179,27 +185,26 @@ def test_par_sensor():
             
             # Phase 2: Now try with minimalmodbus for the real reading
             print(f"\n[2/2] Verifying with minimalmodbus library:")
-            try:
-                sensor, par_value = test_with_minimalmodbus(SERIAL_PORT, baud, SLAVE_ID)
-                print(f"✅ SUCCESS! PAR Value: {par_value} μmol/m²/s at {baud} baud\n")
-                
-                print("Continuous read mode. Press Ctrl+C to stop.")
-                while True:
+            sensor, par_value = test_with_minimalmodbus(SERIAL_PORT, baud, SLAVE_ID)
+            print(f"✅ SUCCESS! PAR Value: {par_value} μmol/m²/s at {baud} baud\n")
+            
+            print("Continuous read mode. Press Ctrl+C to stop.")
+            while True:
+                try:
                     par_value = sensor.read_register(
                         registeraddress=REGISTER_ADDRESS,
                         number_of_decimals=0,
                         functioncode=3
                     )
                     print(f"PAR Value: {par_value} μmol/m²/s")
-                    time.sleep(1)
-                    
-            except IOError as e:
-                print(f"  minimalmodbus failed: {e}")
-                print(f"  But raw test worked — this may be a minimalmodbus timing issue.")
-                print(f"  Try using the raw_serial_test() function directly.\n")
-            except KeyboardInterrupt:
-                print("\nStopped by user.")
-                return
+                except IOError as e:
+                    print(f"  ⚠ Occasional read error: {e}. Retrying...")
+                except KeyboardInterrupt:
+                    print("\nStopped by user.")
+                    sensor.serial.close()
+                    return
+                
+                time.sleep(1)
         else:
             print(f"  ✗ No valid response at {baud} baud\n")
 
