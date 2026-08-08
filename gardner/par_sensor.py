@@ -27,9 +27,8 @@ class RS485Serial(serial.Serial):
         res = super().write(b)
         self.flush()         # Wait until all data is written to OS buffer
         
-        # Turn off TX immediately! ser.flush() on Raspberry Pi waits until the 
-        # hardware shift register is empty. Any Python time.sleep() here takes 
-        # >1ms and will collide with the sensor's response.
+        # Apply the 500us delay verified by par_timing.py
+        time.sleep(0.0005)
         self.tx_enable.off() # Switch back to RX
         return res
 
@@ -94,13 +93,10 @@ def raw_serial_test(port, baud, slave_id=1):
         ser.write(request)
         ser.flush()
         
-        # Wait for all bits to leave the shift register
-        bits_per_byte = 10
-        byte_time = bits_per_byte / baud
-        time.sleep(byte_time * 3.5)
+        # Apply the 500us delay verified by par_timing.py
+        time.sleep(0.0005)
         
         tx_enable.off()
-        time.sleep(0.001)
         
         # RX: Wait for response. Expected 7 bytes for a single register read.
         # Give the sensor plenty of time to respond.
