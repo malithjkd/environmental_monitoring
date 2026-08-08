@@ -15,6 +15,7 @@ class RS485Serial(serial.Serial):
         super().__init__(*args, **kwargs)
         
     def write(self, b):
+        self.reset_input_buffer() # Clear any junk bytes before we transmit
         self.tx_enable.on()  # Enable TX
         time.sleep(0.002)    # Brief pause to ensure line is ready
         res = super().write(b)
