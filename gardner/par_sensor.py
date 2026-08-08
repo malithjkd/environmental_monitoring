@@ -1,7 +1,46 @@
+import os
 import minimalmodbus
 import serial
 import time
-from gpiozero import OutputDevice
+
+class SysfsGPIO:
+    """
+    A simple pure-Python class to control GPIO using the Linux sysfs interface.
+    This avoids any reliance on external C libraries or gpiozero warnings.
+    """
+    def __init__(self, pin):
+        self.pin = str(pin)
+        self.path = f"/sys/class/gpio/gpio{self.pin}"
+        
+        # Export the pin if it isn't already exported
+        if not os.path.exists(self.path):
+            try:
+                with open("/sys/class/gpio/export", "w") as f:
+                    f.write(self.pin)
+                time.sleep(0.1)  # wait for OS to create sysfs nodes
+            except IOError:
+                pass
+                
+        # Set direction to out
+        try:
+            with open(f"{self.path}/direction", "w") as f:
+                f.write("out")
+        except IOError as e:
+            print(f"Warning: Could not set GPIO direction: {e}")
+
+    def on(self):
+        try:
+            with open(f"{self.path}/value", "w") as f:
+                f.write("1")
+        except IOError:
+            pass
+
+    def off(self):
+        try:
+            with open(f"{self.path}/value", "w") as f:
+                f.write("0")
+        except IOError:
+            pass
 
 class RS485Serial(serial.Serial):
     """
@@ -10,7 +49,7 @@ class RS485Serial(serial.Serial):
     """
     def __init__(self, *args, **kwargs):
         self.tx_enable_pin = kwargs.pop('tx_enable_pin', 18)
-        self.tx_enable = OutputDevice(self.tx_enable_pin)
+        self.tx_enable = SysfsGPIO(self.tx_enable_pin)
         self.tx_enable.off() # Start in RX mode
         super().__init__(*args, **kwargs)
         
@@ -28,50 +67,50 @@ class RS485Serial(serial.Serial):
 
 # --- CONFIGURATION ---
 # Sensor: DFRobot SEN0641 (RS485 Photosynthetically Active Radiation Sensor)
-# The Seeed Studio RS-485 Shield uses the Raspberry Pi hardware UART (/dev/serial0)
 SERIAL_PORT = '/dev/serial0' 
 SLAVE_ID = 1          # Default Modbus ID for most sensors
-BAUD_RATE = 4800      # Default baud rate for SEN0641 is 4800 (not 9600)
 REGISTER_ADDRESS = 0  # Replace with the exact register address from the SEN0641 datasheet if different
 # ---------------------
 
 def test_par_sensor():
-    try:
-        # Initialize the Modbus instrument
-        sensor = minimalmodbus.Instrument(SERIAL_PORT, SLAVE_ID)
-        sensor.serial.close() # Close the default serial connection
-        
-        # Replace with our custom RS-485 serial that toggles GPIO 18
-        sensor.serial = RS485Serial(SERIAL_PORT)
-        
-        # Configure serial communication parameters
-        sensor.serial.baudrate = BAUD_RATE
-        sensor.serial.bytesize = 8
-        sensor.serial.parity   = serial.PARITY_NONE
-        sensor.serial.stopbits = 1
-        sensor.serial.timeout  = 1.0  # 1 second timeout
+    print(f"Testing connection to PAR Sensor on {SERIAL_PORT}...")
+    baud_rates = [4800, 9600, 19200, 115200]
+    
+    for baud in baud_rates:
+        print(f"\n--- Trying {baud} baud ---")
+        try:
+            sensor = minimalmodbus.Instrument(SERIAL_PORT, SLAVE_ID)
+            sensor.serial.close() # Close the default serial connection
+            
+            # Replace with our custom RS-485 serial that toggles GPIO 18
+            sensor.serial = RS485Serial(SERIAL_PORT)
+            
+            # Configure serial communication parameters
+            sensor.serial.baudrate = baud
+            sensor.serial.bytesize = 8
+            sensor.serial.parity   = serial.PARITY_NONE
+            sensor.serial.stopbits = 1
+            sensor.serial.timeout  = 1.0  # 1 second timeout
 
-        print(f"Connecting to PAR Sensor on {SERIAL_PORT} at {BAUD_RATE} baud...")
-        print("Starting data read. Press Ctrl+C to stop.\n")
-
-        while True:
-            try:
-                # Read 1 register (16-bit integer). 
-                # Function code 3 (Holding Register) or 4 (Input Register) is standard.
+            # Attempt to read 1 register (16-bit integer). 
+            par_value = sensor.read_register(registeraddress=REGISTER_ADDRESS, number_of_decimals=0, functioncode=3)
+            
+            print(f"SUCCESS! PAR Value: {par_value} μmol/m²/s at {baud} baud.")
+            
+            print("\nContinuous read mode. Press Ctrl+C to stop.")
+            while True:
                 par_value = sensor.read_register(registeraddress=REGISTER_ADDRESS, number_of_decimals=0, functioncode=3)
-                
                 print(f"PAR Value: {par_value} μmol/m²/s")
+                time.sleep(1)
                 
-            except IOError as e:
-                print(f"Failed to read from sensor: {e}")
-            except Exception as e:
-                print(f"Unexpected error: {e}")
-                
-            time.sleep(1)
-
-    except Exception as e:
-        print(f"Initialization error: {e}")
-        print("Ensure the USB-RS485 adapter is plugged in and the port name is correct.")
+        except IOError as e:
+            print(f"Failed at {baud} baud: {e}")
+        except Exception as e:
+            print(f"Unexpected error at {baud} baud: {e}")
+            
+    print("\nCould not connect to sensor on any standard baud rate.")
+    print("If you see 'returned no data (device disconnected or multiple access on port)'")
+    print("Please make sure you have DISABLED the Serial Console via `sudo raspi-config`!")
 
 if __name__ == '__main__':
     test_par_sensor()
