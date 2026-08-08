@@ -1,13 +1,34 @@
 import minimalmodbus
 import serial
 import time
+from gpiozero import OutputDevice
+
+class RS485Serial(serial.Serial):
+    """
+    Custom serial wrapper that toggles a GPIO pin for RS-485 flow control.
+    The Seeed Studio shield requires GPIO 18 to be HIGH for TX and LOW for RX.
+    """
+    def __init__(self, *args, **kwargs):
+        self.tx_enable_pin = kwargs.pop('tx_enable_pin', 18)
+        self.tx_enable = OutputDevice(self.tx_enable_pin)
+        self.tx_enable.off() # Start in RX mode
+        super().__init__(*args, **kwargs)
+        
+    def write(self, b):
+        self.tx_enable.on()  # Enable TX
+        time.sleep(0.002)    # Brief pause to ensure line is ready
+        res = super().write(b)
+        self.flush()         # Wait until all data is written
+        time.sleep(0.002)    # Brief pause before disabling TX
+        self.tx_enable.off() # Switch back to RX
+        return res
 
 # --- CONFIGURATION ---
 # Sensor: DFRobot SEN0641 (RS485 Photosynthetically Active Radiation Sensor)
 # The Seeed Studio RS-485 Shield uses the Raspberry Pi hardware UART (/dev/serial0)
 SERIAL_PORT = '/dev/serial0' 
 SLAVE_ID = 1          # Default Modbus ID for most sensors
-BAUD_RATE = 9600      # Default baud rate for SEN0641
+BAUD_RATE = 4800      # Default baud rate for SEN0641 is 4800 (not 9600)
 REGISTER_ADDRESS = 0  # Replace with the exact register address from the SEN0641 datasheet if different
 # ---------------------
 
@@ -15,6 +36,10 @@ def test_par_sensor():
     try:
         # Initialize the Modbus instrument
         sensor = minimalmodbus.Instrument(SERIAL_PORT, SLAVE_ID)
+        sensor.serial.close() # Close the default serial connection
+        
+        # Replace with our custom RS-485 serial that toggles GPIO 18
+        sensor.serial = RS485Serial(SERIAL_PORT)
         
         # Configure serial communication parameters
         sensor.serial.baudrate = BAUD_RATE

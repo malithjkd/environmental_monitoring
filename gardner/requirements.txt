@@ -1,2 +1,4 @@
 minimalmodbus
 pyserial
+gpiozero
+RPi.GPIO
