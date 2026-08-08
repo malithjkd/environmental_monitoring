@@ -18,8 +18,10 @@ class RS485Serial(serial.Serial):
         self.tx_enable.on()  # Enable TX
         time.sleep(0.002)    # Brief pause to ensure line is ready
         res = super().write(b)
-        self.flush()         # Wait until all data is written
-        time.sleep(0.002)    # Brief pause before disabling TX
+        self.flush()         # Wait until all data is written to OS buffer
+        # Flush returns when the OS buffer is empty, but the UART shift register 
+        # might still be sending the last byte. At 4800 baud, 1 byte takes ~2ms.
+        time.sleep(0.005)    # Wait 5ms to ensure the last byte is fully on the wire
         self.tx_enable.off() # Switch back to RX
         return res
 
@@ -48,7 +50,7 @@ def test_par_sensor():
         sensor.serial.stopbits = 1
         sensor.serial.timeout  = 1.0  # 1 second timeout
 
-        print(f"Connecting to PAR Sensor on {SERIAL_PORT}...")
+        print(f"Connecting to PAR Sensor on {SERIAL_PORT} at {BAUD_RATE} baud...")
         print("Starting data read. Press Ctrl+C to stop.\n")
 
         while True:
@@ -59,8 +61,8 @@ def test_par_sensor():
                 
                 print(f"PAR Value: {par_value} μmol/m²/s")
                 
-            except IOError:
-                print("Failed to read from sensor. Check wiring, power, and configuration.")
+            except IOError as e:
+                print(f"Failed to read from sensor: {e}")
             except Exception as e:
                 print(f"Unexpected error: {e}")
                 
