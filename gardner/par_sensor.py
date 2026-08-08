@@ -2,45 +2,11 @@ import os
 import minimalmodbus
 import serial
 import time
+import warnings
 
-class SysfsGPIO:
-    """
-    A simple pure-Python class to control GPIO using the Linux sysfs interface.
-    This avoids any reliance on external C libraries or gpiozero warnings.
-    """
-    def __init__(self, pin):
-        self.pin = str(pin)
-        self.path = f"/sys/class/gpio/gpio{self.pin}"
-        
-        # Export the pin if it isn't already exported
-        if not os.path.exists(self.path):
-            try:
-                with open("/sys/class/gpio/export", "w") as f:
-                    f.write(self.pin)
-                time.sleep(0.1)  # wait for OS to create sysfs nodes
-            except IOError:
-                pass
-                
-        # Set direction to out
-        try:
-            with open(f"{self.path}/direction", "w") as f:
-                f.write("out")
-        except IOError as e:
-            print(f"Warning: Could not set GPIO direction: {e}")
-
-    def on(self):
-        try:
-            with open(f"{self.path}/value", "w") as f:
-                f.write("1")
-        except IOError:
-            pass
-
-    def off(self):
-        try:
-            with open(f"{self.path}/value", "w") as f:
-                f.write("0")
-        except IOError:
-            pass
+# Suppress the gpiozero fallback warnings for a cleaner output
+warnings.filterwarnings("ignore", module="gpiozero")
+from gpiozero import OutputDevice
 
 class RS485Serial(serial.Serial):
     """
@@ -49,7 +15,7 @@ class RS485Serial(serial.Serial):
     """
     def __init__(self, *args, **kwargs):
         self.tx_enable_pin = kwargs.pop('tx_enable_pin', 18)
-        self.tx_enable = SysfsGPIO(self.tx_enable_pin)
+        self.tx_enable = OutputDevice(self.tx_enable_pin)
         self.tx_enable.off() # Start in RX mode
         super().__init__(*args, **kwargs)
         
