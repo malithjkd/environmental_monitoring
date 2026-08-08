@@ -26,14 +26,11 @@ class RS485Serial(serial.Serial):
         time.sleep(0.005)    # Brief pause to ensure the transceiver has switched
         res = super().write(b)
         self.flush()         # Wait until all data is written to OS buffer
-        # Calculate exact time for the last byte to leave the UART shift register.
-        # At 4800 baud, 1 byte (10 bits: start + 8 data + stop) takes ~2.08ms.
-        # We wait for at least 2 full byte-times to be safe.
-        bits_per_byte = 10  # start + 8 data + stop
-        byte_time = bits_per_byte / self.baudrate
-        time.sleep(byte_time * 3.5)  # Wait 3.5 character times (Modbus spec minimum)
+        
+        # Turn off TX immediately! ser.flush() on Raspberry Pi waits until the 
+        # hardware shift register is empty. Any Python time.sleep() here takes 
+        # >1ms and will collide with the sensor's response.
         self.tx_enable.off() # Switch back to RX
-        time.sleep(0.001)    # Let the transceiver settle in RX mode
         return res
 
 
