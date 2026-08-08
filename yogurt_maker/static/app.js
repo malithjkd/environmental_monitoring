@@ -305,11 +305,11 @@ async function startProcess() {
             document.getElementById("btnStart").textContent = "✓ Running";
             document.getElementById("btnStop").disabled = false;
 
-            // Clear chart for new run
-            chartData.labels = [];
-            chartData.temperature = [];
-            chartData.setpoint = [];
-            chartData.duty = [];
+            // Clear chart for new run (mutate original arrays so Chart.js keeps the reference)
+            chartData.labels.length = 0;
+            chartData.temperature.length = 0;
+            chartData.setpoint.length = 0;
+            chartData.duty.length = 0;
             if (chart) chart.update();
         } else {
             alert("Error: " + (result.detail || "Unknown error"));
