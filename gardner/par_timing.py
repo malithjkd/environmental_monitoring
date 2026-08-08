@@ -4,10 +4,17 @@ Focused timing fix for DFRobot SEN0641 PAR Sensor.
 The sensor responds VERY quickly after our TX, so we need to
 switch to RX as fast as possible after the last byte is sent.
 """
-import serial
 import time
 import struct
 import warnings
+import sys
+
+# Robust pyserial import - avoids conflicts with other 'serial' modules
+try:
+    from serial import Serial, PARITY_NONE
+except (ImportError, AttributeError):
+    print("ERROR: pyserial not installed. Run: pip install pyserial")
+    sys.exit(1)
 
 warnings.filterwarnings("ignore", module="gpiozero")
 from gpiozero import OutputDevice
@@ -43,9 +50,9 @@ def try_read(post_tx_us, label=""):
     time.sleep(0.05)
     
     try:
-        ser = serial.Serial(
+        ser = Serial(
             port=SERIAL_PORT, baudrate=BAUD,
-            bytesize=8, parity=serial.PARITY_NONE, stopbits=1,
+            bytesize=8, parity=PARITY_NONE, stopbits=1,
             timeout=2.0
         )
         
@@ -141,9 +148,9 @@ def try_read_split(label=""):
     time.sleep(0.05)
     
     try:
-        ser = serial.Serial(
+        ser = Serial(
             port=SERIAL_PORT, baudrate=BAUD,
-            bytesize=8, parity=serial.PARITY_NONE, stopbits=1,
+            bytesize=8, parity=PARITY_NONE, stopbits=1,
             timeout=2.0
         )
         
@@ -239,9 +246,9 @@ def main():
     crc = crc16_modbus(request)
     request += struct.pack('<H', crc)
     
-    ser = serial.Serial(
+    ser = Serial(
         port=SERIAL_PORT, baudrate=BAUD,
-        bytesize=8, parity=serial.PARITY_NONE, stopbits=1,
+        bytesize=8, parity=PARITY_NONE, stopbits=1,
         timeout=2.0
     )
     ser.reset_input_buffer()
