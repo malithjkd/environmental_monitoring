@@ -26,10 +26,7 @@ class RS485Serial(serial.Serial):
         time.sleep(0.005)    # Brief pause to ensure the transceiver has switched
         res = super().write(b)
         self.flush()         # Wait until all data is written to OS buffer
-        
-        # Apply the 500us delay verified by par_timing.py
-        time.sleep(0.0005)
-        self.tx_enable.off() # Switch back to RX
+        self.tx_enable.off() # Switch back to RX IMMEDIATELY
         return res
 
 
@@ -92,11 +89,7 @@ def raw_serial_test(port, baud, slave_id=1):
         
         ser.write(request)
         ser.flush()
-        
-        # Apply the 500us delay verified by par_timing.py
-        time.sleep(0.0005)
-        
-        tx_enable.off()
+        tx_enable.off() # IMMEDIATELY switch to RX
         
         # RX: Wait for response. Expected 7 bytes for a single register read.
         # Give the sensor plenty of time to respond.
