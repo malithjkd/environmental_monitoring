@@ -338,6 +338,41 @@ async function stopProcess() {
     }
 }
 
+async function submitManualTemp() {
+    const tempInput = document.getElementById("manualTempInput");
+    const tempVal = parseFloat(tempInput.value);
+    
+    if (isNaN(tempVal)) {
+        alert("Please enter a valid temperature.");
+        return;
+    }
+    
+    try {
+        const resp = await fetch("/api/manual_temp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ temperature: tempVal })
+        });
+        
+        if (resp.ok) {
+            tempInput.value = ""; // clear after success
+            // Optional: visual feedback
+            const btn = tempInput.nextElementSibling;
+            const originalText = btn.textContent;
+            btn.textContent = "Logged!";
+            btn.style.backgroundColor = "#4caf50";
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = "";
+            }, 2000);
+        } else {
+            alert("Failed to log manual temp");
+        }
+    } catch (err) {
+        alert("Error connecting to server: " + err.message);
+    }
+}
+
 // ---- Utilities ----
 function formatDuration(totalSeconds) {
     const hours = Math.floor(totalSeconds / 3600);

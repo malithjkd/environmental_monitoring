@@ -71,6 +71,7 @@ class PicoManager:
         self.raw_log_file = None
         self.run_dir = None
         self.active_config = None
+        self.manual_temp = None
 
     def generate_script(self, user_config: dict) -> str:
         """Read pico_template.py and inject the CONFIG block."""
@@ -153,7 +154,7 @@ class PicoManager:
         csv_path = self.run_dir / "temperature_log.csv"
         self.csv_file = open(csv_path, "w")
         self.csv_file.write(
-            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s\n"
+            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C\n"
         )
 
         raw_log_path = self.run_dir / "raw_output.log"
@@ -285,6 +286,7 @@ class PicoManager:
 
                     # Write to CSV
                     if self.csv_file:
+                        mt_str = str(self.manual_temp) if self.manual_temp is not None else ""
                         self.csv_file.write(
                             f"{now_str},"
                             f"{data.get('t', 0)},"
@@ -293,9 +295,11 @@ class PicoManager:
                             f"{data.get('relay', 0)},"
                             f"{data.get('stage', '')},"
                             f"{data.get('elapsed', 0)},"
-                            f"{data.get('stage_elapsed', 0)}\n"
+                            f"{data.get('stage_elapsed', 0)},"
+                            f"{mt_str}\n"
                         )
                         self.csv_file.flush()
+                        self.manual_temp = None
 
                 # Print messages to server console
                 if "msg" in data:
@@ -426,6 +430,16 @@ async def api_stop():
     """Emergency stop — terminate process and force relay off."""
     pico.stop()
     return {"status": "stopped"}
+
+
+@app.post("/api/manual_temp")
+async def api_manual_temp(request: dict):
+    """Log a manually measured temperature to the CSV file."""
+    temp = request.get("temperature")
+    if temp is not None:
+        with pico.lock:
+            pico.manual_temp = float(temp)
+    return {"status": "ok"}
 
 
 @app.get("/api/events")

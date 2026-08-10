@@ -160,6 +160,14 @@
                     <label for="ambientTemp">Ambient Temp (°C)</label>
                     <input type="number" id="ambientTemp" value="25" min="10" max="40" step="1">
                 </div>
+
+                <div class="control-group" style="grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
+                    <label for="manualTempInput">Log Manual Pot Temp (°C)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="manualTempInput" placeholder="e.g. 45.5" step="0.1" style="flex: 1;">
+                        <button class="btn" onclick="submitManualTemp()" style="padding: 8px 16px; min-width: auto;">Log to CSV</button>
+                    </div>
+                </div>
             </div>
 
             <div class="button-row">

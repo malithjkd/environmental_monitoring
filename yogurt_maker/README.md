@@ -33,7 +33,7 @@ A physics-informed temperature control system for making yogurt. Uses a Raspberr
 ## Hardware Requirements
 - **Microcontroller**: Raspberry Pi Pico 2 W
 - **Temperature Sensor**: DS18B20 (connected to GPIO 3)
-- **Relay Module**: SSR (Solid State Relay) on GPIO 15
+- **Relay Module**: SSR (Solid State Relay) on GPIO 12
 - **Host Machine**: Raspberry Pi Zero 2 W
 
 ## Supported Machines
@@ -46,7 +46,7 @@ A physics-informed temperature control system for making yogurt. Uses a Raspberr
 ## Yogurt Making Process (Multi-Stage)
 
 1. **PASTEURIZE** — Heat milk to 85°C (controlled ramp)
-2. **HOLD_85** — Hold at 85°C for 5 minutes
+2. **HOLD_85** — Hold at 85°C for 10 minutes
 3. **COOL_DOWN** — Heater OFF, passive cooling to ~43°C
 4. **FERMENT** — Hold at 42°C ± 0.5°C for 6–12 hours
 5. **DONE** — Heater OFF, process complete
@@ -90,6 +90,14 @@ The thermal model parameters (`k_cool`, effective power) are determined through 
 |------|---------|-------------|
 | `run_and_log.py` | Pi Zero 2W | Standalone logger (mpremote + CSV) |
 | `plot_temperature.py` | Mac | Matplotlib plotting |
+
+## Future Development & Next Tests
+
+### Test 4: Rapid Heating & Manual Cooling Dynamics
+To optimize the overall 12-hour cycle time, we are exploring rapid transient responses. 
+**Setup**: 1.75L water bath + 0.25L milk in pot.
+**Goal**: Rapidly heat the bath to 85°C and manually swap the bath water to rapidly cool to 42°C. 
+**Logging**: The PID temperature sensor must remain in the water bath. Use a manual kitchen thermometer to measure the milk temperature, and use the **"Log Manual Pot Temp"** feature on the dashboard to inject your readings directly into the CSV.
 
 ## Quick Start
 
@@ -149,3 +157,6 @@ scp -r malithjkd@pizero2:~/environmental_monitoring/yogurt_maker/data /Users/mal
 
 ## Yogurt Starter Reference
 https://yogourmet.com/en/canada/product-details/mild-yogurt-starter/
+
+
+python3 analytics/generate_html_plot.py data/2026_08_08_08_13_46
