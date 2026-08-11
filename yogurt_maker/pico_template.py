@@ -22,10 +22,10 @@ import ujson
 CONFIG = {
     "machine_name": "800W Multi Cooker",
     "power_watts": 800,
-    "water_mass_kg": 1.0,
-    "k_cool": 5.0,
-    "ambient_temp": 25.0,
-    "kp": 0.01,
+    "water_mass_kg": 1.75,
+    "k_cool": 0.839,
+    "ambient_temp": 28,
+    "kp": 0.001048,
     "ki": 0.0001,
     "kd": 0.0,
     "pwm_window_s": 30,
@@ -373,12 +373,19 @@ def main():
 
                     # PID: feedback correction
                     error = target - current_temp
-                    dt = utime.ticks_diff(now, last_pid_ms) / 1000.0
-                    last_pid_ms = now
-                    duty_pid = pid.compute(error, dt)
+                    
+                    if process.stage == "PASTEURIZE" and process.get_stage_elapsed_s(now) < 300:
+                        # Fixed 35% boost for the first 5 minutes
+                        duty = 0.35
+                        pid.reset()
+                        last_pid_ms = now
+                    else:
+                        dt = utime.ticks_diff(now, last_pid_ms) / 1000.0
+                        last_pid_ms = now
+                        duty_pid = pid.compute(error, dt)
 
-                    # Combined duty
-                    duty = duty_ff + duty_pid
+                        # Combined duty
+                        duty = duty_ff + duty_pid
 
                     # Clamp to [0, 1]
                     if duty < 0.0:

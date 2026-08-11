@@ -19,6 +19,9 @@ def generate_report(run_dir):
     duties = []
     relays = []
     
+    manual_timestamps = []
+    manual_temps = []
+    
     # Downsample data to avoid freezing the browser if there are too many points
     # 12 hours * 3600 seconds / 2s interval = 21600 points. Let's take every 10th point.
     step = 10 
@@ -34,6 +37,12 @@ def generate_report(run_dir):
                 setpoints.append(float(row['Setpoint_C']))
                 duties.append(float(row['Duty_Cycle']))
                 relays.append(float(row['Relay_State']))
+            
+            # Manual temps are sparse, so we should always grab them regardless of step
+            if 'Manual_Temp_C' in row and row['Manual_Temp_C'].strip():
+                time_str = row['Timestamp'].split(' ')[1] if ' ' in row['Timestamp'] else row['Timestamp']
+                manual_timestamps.append(time_str)
+                manual_temps.append(float(row['Manual_Temp_C']))
             
     # read meta
     title = "Yogurt Maker Run Analysis"
@@ -106,6 +115,17 @@ def generate_report(run_dir):
                             yAxisID: 'y',
                             tension: 0,
                             pointRadius: 0,
+                            borderWidth: 2
+                        }},
+                        {{
+                            label: 'Manual Pot Temp (°C)',
+                            data: {json.dumps([{'x': mt_t, 'y': mt_v} for mt_t, mt_v in zip(manual_timestamps, manual_temps)])},
+                            borderColor: '#00E676',
+                            backgroundColor: '#00E676',
+                            yAxisID: 'y',
+                            type: 'scatter',
+                            pointRadius: 6,
+                            pointStyle: 'crossRot',
                             borderWidth: 2
                         }},
                         {{

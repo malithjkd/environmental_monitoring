@@ -22,7 +22,7 @@ import ujson
 CONFIG = {
     "machine_name": "800W Multi Cooker",
     "power_watts": 800,
-    "water_mass_kg": 2,
+    "water_mass_kg": 1.75,
     "k_cool": 0.839,
     "ambient_temp": 28,
     "kp": 0.001048,
@@ -34,7 +34,7 @@ CONFIG = {
     "hold_85_duration_s": 600,
     "ferment_temp": 42,
     "ferment_tolerance": 0.5,
-    "ferment_duration_s": 14400,
+    "ferment_duration_s": 7200,
     "safety_max_temp": 95.0,
     "sensor_pin": 3,
     "relay_pin": 12
