@@ -11,6 +11,8 @@ From the first calibration test (`800w_multi_cooker_2026_08_02_22_27_43`), we de
 - **Thermal Soak**: When heating stops, the residual heat from the cooker plate causes the water temperature to continue rising for several minutes.
 - **Cooling Rate (Lid Closed)**: -0.24 °C/min (Measured *after* peak thermal soak).
 - **Cooling Rate (Lid Open)**: -0.74 °C/min.
+- **Cooling Rate (Water Swap)**: ~-15 to -30 °C/min during active swapping.
+- **Thermal Lag (Porcelain Pot)**: The thick porcelain pot creates a massive thermal time constant (tau = ~2.8 hours). The temperature inside the pot lags the water bath temperature by approximately **10 minutes**.
 
 ## Test History
 
@@ -28,33 +30,26 @@ From the first calibration test (`800w_multi_cooker_2026_08_02_22_27_43`), we de
 - **Folder**: `data/2026_08_08_08_13_46`
 - **Outcome**: Good temperature accuracy, but the total process time exceeded 12 hours due to the extremely slow initial heating and cooling phases.
 
-### Test 5: Successful Yogurt Production
+### Test 5: Successful Yogurt Production & Manual Cooling Analysis
 - **Folder**: `data/2026_08_11_20_50_28`
 - **Setup**: Full yogurt process run with actual milk.
-- **Outcome**: Successfully created yogurt! The system accurately maintained the pasteurization and fermentation temperatures (heating took ~3.8 hours, fermentation ran for the full duration), resulting in a perfect batch of homemade yogurt. Note: The next test will utilize the newly implemented 35% boost and 10s PWM to radically speed up this heating phase.
+- **Outcome**: Successfully created yogurt! However, heating took ~3.8 hours using the standard PID feedforward. 
+- **Cooling Analysis**: User performed manual water swaps. The temperature dropped from 87°C to 45°C in **41 minutes** through a series of water swaps. Key finding: The pot re-heats the new cold water very quickly (bouncing from 70°C up to 71°C) due to thermal lag, requiring multiple small water swaps rather than one big one.
 
 ---
 
-## Next Steps: Process Time Optimization
+## Next Steps: Rapid Heat Testing
 
-### Proposed Test 4: Rapid Heating & Manual Cooling Dynamics
-To reduce the 12-hour cycle time, we need to determine how fast the milk responds to extreme transients (rapid heating and rapid manual cooling) without destabilizing the PID controller.
+The system has been upgraded to a 6-stage process to eliminate the 3.8-hour heat-up time:
+`RAPID_HEAT` → `PASTEURIZE` → `HOLD_85` → `COOL_DOWN` → `FERMENT` → `DONE`
 
-**Setup**:
-1. 1.75L water in the bath, 0.25L water in the porcelain pot (simulating milk).
-2. The DS18B20 sensor stays in the **water bath** for the PID controller. 
-3. Use a **separate manual kitchen thermometer** to check the temperature inside the porcelain pot.
-4. **Log your readings**: Whenever you measure the pot temperature, type it into the **"Log Manual Pot Temp (°C)"** box on the web dashboard and click **"Log to CSV"**. This ensures your manual readings are perfectly synced with the automated sensor data.
+**Test 6 Objectives**:
+1. Verify the `RAPID_HEAT` phase (runs at 80% duty cycle until 70°C) correctly hands over to PID control for the final 15°C climb to 85°C without dangerous overshoot.
+2. Verify the dashboard features: Sensor Location logging, CSV Pause/Resume (for moving the sensor safely), and Water Swap logging.
 
-**Procedure**:
-1. **Rapid Heating**: Start the pasteurization phase (target 85°C). 
-   - *Schedule*: Measure the pot temperature every 2 minutes while heating.
-   - *Critical Measurement*: The moment the dashboard indicates the water bath has reached 85°C, measure the pot temperature immediately. Then measure the pot temperature every 1 minute until the pot also reaches 85°C.
-2. **Hold Phase**: Keep the bath at 85°C for 10 minutes.
-   - *Schedule*: Measure the pot temperature at the 5-minute mark and the 10-minute mark to check if it stabilizes.
-3. **Rapid Cooling (Manual Water Swap)**: 
-   - Set the dashboard target to 42°C (FERMENT).
-   - Manually scoop out the hot water bath and pour in cold tap water until the bath hits ~42°C.
-   - *Schedule*: Measure the pot temperature every 2 minutes. Record exactly how many minutes it takes for the pot to drop from 85°C to 45°C.
-
-*Agent Note: Do not write logic that asks the user to move the PID sensor during a run, as this disrupts the controller's PWM cycle.*
+**Procedure for Test 6**:
+1. Set sensor location to `water_bath` on the dashboard.
+2. Start the process. The system should rapidly heat to 70°C, then gracefully approach 85°C.
+3. Hold for 20 minutes (now configurable on the dashboard).
+4. When `COOL_DOWN` starts, the "Water Swapped" button will pulse. Perform manual water swaps to bring the temp down to ~45°C, clicking the button when you do.
+5. If you want to check the milk temperature, click "Pause Logging", move the sensor into the pot, change the location dropdown to `inside_pot`, and click "Resume Logging".

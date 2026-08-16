@@ -157,6 +157,13 @@ class PicoManager:
         with open(self.run_dir / "metadata.json", "w") as f:
             json.dump(metadata, f, indent=4)
 
+        # Save a copy of the generated Pico controller script for debugging/tracking
+        generated_script_dest = self.run_dir / "pico_controller_generated.py"
+        try:
+            generated_script_dest.write_text(generated_script)
+        except Exception as e:
+            print(f"Warning: Failed to save generated script to run directory: {e}")
+
         # Open log files
         csv_path = self.run_dir / "temperature_log.csv"
         self.csv_file = open(csv_path, "w")
