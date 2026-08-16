@@ -26,8 +26,12 @@ From the first calibration test (`800w_multi_cooker_2026_08_02_22_27_43`), we de
 
 ### Test 3: First Yogurt Making Attempt
 - **Folder**: `data/2026_08_08_08_13_46`
-- **Setup**: Full yogurt process run.
 - **Outcome**: Good temperature accuracy, but the total process time exceeded 12 hours due to the extremely slow initial heating and cooling phases.
+
+### Test 5: Successful Yogurt Production
+- **Folder**: `data/2026_08_11_20_50_28`
+- **Setup**: Full yogurt process run with actual milk.
+- **Outcome**: Successfully created yogurt! The system accurately maintained the pasteurization and fermentation temperatures (heating took ~3.8 hours, fermentation ran for the full duration), resulting in a perfect batch of homemade yogurt. Note: The next test will utilize the newly implemented 35% boost and 10s PWM to radically speed up this heating phase.
 
 ---
 

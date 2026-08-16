@@ -212,6 +212,40 @@ function updateDashboard(data) {
     if (connected && typeof data.t === "number") {
         addChartPoint(data);
     }
+
+    // Update sensor location and CSV status displays
+    const sensorDisplay = document.getElementById("sensorLocationDisplay");
+    if (sensorDisplay && data.sensor_location) {
+        sensorDisplay.textContent = data.sensor_location === "inside_pot" ? "Inside Pot" : "Water Bath";
+        sensorDisplay.style.color = data.sensor_location === "inside_pot" ? "#ff9800" : "#4ecdc4";
+    }
+
+    const csvDisplay = document.getElementById("csvStatusDisplay");
+    if (csvDisplay && data.csv_paused !== undefined) {
+        csvDisplay.textContent = data.csv_paused ? "PAUSED" : "Recording";
+        csvDisplay.style.color = data.csv_paused ? "#ff5252" : "#4caf50";
+        const toggleBtn = document.getElementById("btnToggleCsv");
+        if (toggleBtn) {
+            toggleBtn.textContent = data.csv_paused ? "▶ Resume Logging" : "⏸ Pause Logging";
+        }
+    }
+
+    // Water swap notification when entering COOL_DOWN
+    if (data.stage === "COOL_DOWN" && !window._coolDownNotified) {
+        window._coolDownNotified = true;
+        const swapBtn = document.getElementById("btnWaterSwap");
+        if (swapBtn) {
+            swapBtn.style.animation = "pulse 1s infinite";
+            swapBtn.style.background = "rgba(33,150,243,0.6)";
+        }
+    } else if (data.stage !== "COOL_DOWN") {
+        window._coolDownNotified = false;
+        const swapBtn = document.getElementById("btnWaterSwap");
+        if (swapBtn) {
+            swapBtn.style.animation = "";
+            swapBtn.style.background = "rgba(33,150,243,0.3)";
+        }
+    }
 }
 
 function updateConnectionStatus(connected) {
@@ -228,7 +262,7 @@ function updateConnectionStatus(connected) {
 }
 
 function updateStageProgress(currentStage) {
-    const stages = ["PASTEURIZE", "HOLD_85", "COOL_DOWN", "FERMENT", "DONE"];
+    const stages = ["RAPID_HEAT", "PASTEURIZE", "HOLD_85", "COOL_DOWN", "FERMENT", "DONE"];
     const currentIdx = stages.indexOf(currentStage);
 
     stages.forEach((stage, idx) => {
@@ -370,6 +404,68 @@ async function submitManualTemp() {
         }
     } catch (err) {
         alert("Error connecting to server: " + err.message);
+    }
+}
+
+async function setSensorLocation() {
+    const select = document.getElementById("sensorLocation");
+    const location = select.value;
+
+    try {
+        const resp = await fetch("/api/sensor_location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ location: location }),
+        });
+
+        if (resp.ok) {
+            const display = document.getElementById("sensorLocationDisplay");
+            display.textContent = location === "inside_pot" ? "Inside Pot" : "Water Bath";
+            display.style.color = location === "inside_pot" ? "#ff9800" : "#4ecdc4";
+        }
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function toggleCSVLogging() {
+    try {
+        const resp = await fetch("/api/toggle_csv", { method: "POST" });
+        const result = await resp.json();
+
+        const btn = document.getElementById("btnToggleCsv");
+        const display = document.getElementById("csvStatusDisplay");
+
+        if (result.csv_paused) {
+            btn.textContent = "▶ Resume Logging";
+            display.textContent = "PAUSED";
+            display.style.color = "#ff5252";
+        } else {
+            btn.textContent = "⏸ Pause Logging";
+            display.textContent = "Recording";
+            display.style.color = "#4caf50";
+        }
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function logWaterSwap() {
+    try {
+        const resp = await fetch("/api/water_swap", { method: "POST" });
+
+        if (resp.ok) {
+            const btn = document.getElementById("btnWaterSwap");
+            const originalText = btn.textContent;
+            btn.textContent = "✅ Logged!";
+            btn.style.background = "rgba(76,175,80,0.4)";
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = "rgba(33,150,243,0.3)";
+            }, 3000);
+        }
+    } catch (err) {
+        alert("Error: " + err.message);
     }
 }
 

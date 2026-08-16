@@ -29,9 +29,11 @@ CONFIG = {
     "ki": 0.0001,
     "kd": 0.0,
     "pwm_window_s": 30,
+    "rapid_heat_duty": 0.80,
+    "rapid_heat_cutoff_temp": 70.0,
     "pasteurize_temp": 85.0,
     "pasteurize_tolerance": 1.0,
-    "hold_85_duration_s": 300,
+    "hold_85_duration_s": 1200,
     "ferment_temp": 42.0,
     "ferment_tolerance": 0.5,
     "ferment_duration_s": 28800,
@@ -187,16 +189,17 @@ class YogurtProcess:
     """Multi-stage state machine for yogurt production.
 
     Stages:
-        PASTEURIZE → heat milk to 85°C (controlled ramp)
-        HOLD_85    → hold at 85°C for configurable duration
-        COOL_DOWN  → heater OFF, passive cooling to ~43°C
+        RAPID_HEAT → full power heating to cutoff temp (e.g. 70°C)
+        PASTEURIZE → PID-controlled ramp from cutoff to 85°C
+        HOLD_85    → hold at 85°C for configurable duration (default 20 min)
+        COOL_DOWN  → heater OFF, manual water swap or passive cooling to ~43°C
         FERMENT    → hold at 42°C ± 0.5°C for hours
         DONE       → heater OFF, process complete
     """
 
     def __init__(self, config):
         self.config = config
-        self.stage = "PASTEURIZE"
+        self.stage = "RAPID_HEAT"
         now = utime.ticks_ms()
         self.stage_start_ms = now
         self.process_start_ms = now
@@ -205,7 +208,13 @@ class YogurtProcess:
         """Advance state machine based on temperature and time."""
         stage_elapsed_s = utime.ticks_diff(now_ms, self.stage_start_ms) / 1000.0
 
-        if self.stage == "PASTEURIZE":
+        if self.stage == "RAPID_HEAT":
+            # Transition to PID-controlled PASTEURIZE when cutoff reached
+            cutoff = self.config.get("rapid_heat_cutoff_temp", 70.0)
+            if temp >= cutoff:
+                self._transition("PASTEURIZE", now_ms)
+
+        elif self.stage == "PASTEURIZE":
             if temp >= self.config["pasteurize_temp"]:
                 self._transition("HOLD_85", now_ms)
 
@@ -247,7 +256,9 @@ class YogurtProcess:
 
     def get_target(self):
         """Return the temperature setpoint for the current stage, or None."""
-        if self.stage == "PASTEURIZE":
+        if self.stage == "RAPID_HEAT":
+            return self.config.get("rapid_heat_cutoff_temp", 70.0)
+        elif self.stage == "PASTEURIZE":
             return self.config["pasteurize_temp"]
         elif self.stage == "HOLD_85":
             return self.config["pasteurize_temp"]
@@ -257,7 +268,7 @@ class YogurtProcess:
 
     def needs_heating(self):
         """Return True if the current stage uses the heater."""
-        return self.stage in ("PASTEURIZE", "HOLD_85", "FERMENT")
+        return self.stage in ("RAPID_HEAT", "PASTEURIZE", "HOLD_85", "FERMENT")
 
     def get_elapsed_s(self, now_ms):
         """Total process elapsed time in seconds."""
@@ -363,23 +374,22 @@ def main():
                 target = process.get_target()
 
                 if target is not None and process.needs_heating():
-                    # Feedforward: steady-state duty from physics
-                    duty_ff = compute_feedforward(
-                        target,
-                        CONFIG["ambient_temp"],
-                        CONFIG["power_watts"],
-                        CONFIG["k_cool"]
-                    )
-
-                    # PID: feedback correction
-                    error = target - current_temp
-                    
-                    if process.stage == "PASTEURIZE" and process.get_stage_elapsed_s(now) < 300:
-                        # Fixed 35% boost for the first 5 minutes
-                        duty = 0.35
+                    if process.stage == "RAPID_HEAT":
+                        # Full-power rapid heating — bypass PID entirely
+                        duty = CONFIG.get("rapid_heat_duty", 0.80)
                         pid.reset()
                         last_pid_ms = now
                     else:
+                        # Feedforward: steady-state duty from physics
+                        duty_ff = compute_feedforward(
+                            target,
+                            CONFIG["ambient_temp"],
+                            CONFIG["power_watts"],
+                            CONFIG["k_cool"]
+                        )
+
+                        # PID: feedback correction
+                        error = target - current_temp
                         dt = utime.ticks_diff(now, last_pid_ms) / 1000.0
                         last_pid_ms = now
                         duty_pid = pid.compute(error, dt)

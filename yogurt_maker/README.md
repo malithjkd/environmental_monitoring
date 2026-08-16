@@ -96,8 +96,11 @@ The thermal model parameters (`k_cool`, effective power) are determined through 
 ### Test 4: Rapid Heating & Manual Cooling Dynamics
 To optimize the overall 12-hour cycle time, we are exploring rapid transient responses. 
 **Setup**: 1.75L water bath + 0.25L milk in pot.
-**Goal**: Rapidly heat the bath to 85°C and manually swap the bath water to rapidly cool to 42°C. 
 **Logging**: The PID temperature sensor must remain in the water bath. Use a manual kitchen thermometer to measure the milk temperature, and use the **"Log Manual Pot Temp"** feature on the dashboard to inject your readings directly into the CSV.
+
+## Current Status
+- **Test 5 completed successfully**: Real milk was used to produce a perfect batch of yogurt! The thermal control system (Feedforward + PID) safely maintained Pasteurization and Fermentation temperatures.
+- **Up Next**: Now that the core PID control works perfectly, the next step is applying the 35% time-based heating boost during pasteurization to reduce the 3.8-hour initial heat-up time down to minutes.
 
 ## Quick Start
 

@@ -6,6 +6,8 @@
             "k_cool": 0.839,
             "pid": { "kp": 0.001048, "ki": 3e-08, "kd": 0.0 },
             "pwm_window_s": 10,
+            "rapid_heat_duty": 0.80,
+            "rapid_heat_cutoff_temp": 70.0,
             "notes": "High power, large overshoot risk. k_cool and PID are defaults — calibrate before use."
         },
         "500w_rice_cooker_warm": {
@@ -14,6 +16,8 @@
             "k_cool": 3.0,
             "pid": { "kp": 0.02, "ki": 0.0002, "kd": 0.0 },
             "pwm_window_s": 30,
+            "rapid_heat_duty": 0.80,
+            "rapid_heat_cutoff_temp": 65.0,
             "notes": "Warm mode estimated at ~150W effective. k_cool and PID are defaults — calibrate before use."
         },
         "800w_rice_cooker_cook": {
@@ -22,19 +26,23 @@
             "k_cool": 5.0,
             "pid": { "kp": 0.01, "ki": 0.0001, "kd": 0.0 },
             "pwm_window_s": 30,
+            "rapid_heat_duty": 0.80,
+            "rapid_heat_cutoff_temp": 70.0,
             "notes": "Full power cook mode, can exceed 100C. k_cool and PID are defaults — calibrate before use."
         }
     },
     "defaults": {
         "pasteurize_temp": 85.0,
         "pasteurize_tolerance": 1.0,
-        "hold_85_duration_s": 300,
+        "hold_85_duration_s": 1200,
         "ferment_temp": 42.0,
         "ferment_tolerance": 0.5,
         "ferment_duration_s": 28800,
         "ambient_temp": 25.0,
         "safety_max_temp": 95.0,
         "sensor_pin": 3,
-        "relay_pin": 12
+        "relay_pin": 12,
+        "rapid_heat_duty": 0.80,
+        "rapid_heat_cutoff_temp": 70.0
     }
 }

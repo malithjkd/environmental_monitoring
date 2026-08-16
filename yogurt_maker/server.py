@@ -73,6 +73,11 @@ class PicoManager:
         self.active_config = None
         self.manual_temp = None
 
+        # Sensor placement & CSV control
+        self.sensor_location = "water_bath"  # or "inside_pot"
+        self.csv_paused = False
+        self.water_swap_logged = False
+
     def generate_script(self, user_config: dict) -> str:
         """Read pico_template.py and inject the CONFIG block."""
         template = TEMPLATE_PATH.read_text()
@@ -88,9 +93,11 @@ class PicoManager:
             "ki": user_config["ki"],
             "kd": user_config["kd"],
             "pwm_window_s": user_config.get("pwm_window_s", 30),
+            "rapid_heat_duty": user_config.get("rapid_heat_duty", 0.80),
+            "rapid_heat_cutoff_temp": user_config.get("rapid_heat_cutoff_temp", 70.0),
             "pasteurize_temp": user_config.get("pasteurize_temp", 85.0),
             "pasteurize_tolerance": user_config.get("pasteurize_tolerance", 1.0),
-            "hold_85_duration_s": user_config.get("hold_85_duration_s", 300),
+            "hold_85_duration_s": user_config.get("hold_85_duration_s", 1200),
             "ferment_temp": user_config.get("ferment_temp", 42.0),
             "ferment_tolerance": user_config.get("ferment_tolerance", 0.5),
             "ferment_duration_s": user_config.get("ferment_duration_s", 28800),
@@ -154,14 +161,17 @@ class PicoManager:
         csv_path = self.run_dir / "temperature_log.csv"
         self.csv_file = open(csv_path, "w")
         self.csv_file.write(
-            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C\n"
+            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C,Sensor_Location,Event\n"
         )
 
         raw_log_path = self.run_dir / "raw_output.log"
         self.raw_log_file = open(raw_log_path, "w")
 
-        # Clear history for new run
+        # Clear history and reset sensor state for new run
         self.history.clear()
+        self.sensor_location = "water_bath"
+        self.csv_paused = False
+        self.water_swap_logged = False
 
         # Reset Pico before deploying
         try:
@@ -284,9 +294,13 @@ class PicoManager:
                     history_point = {"timestamp": now_str, **data}
                     self.history.append(history_point)
 
-                    # Write to CSV
-                    if self.csv_file:
+                    # Write to CSV (respects pause state)
+                    if self.csv_file and not self.csv_paused:
                         mt_str = str(self.manual_temp) if self.manual_temp is not None else ""
+                        event_str = ""
+                        if self.water_swap_logged:
+                            event_str = "water_swap"
+                            self.water_swap_logged = False
                         self.csv_file.write(
                             f"{now_str},"
                             f"{data.get('t', 0)},"
@@ -296,7 +310,9 @@ class PicoManager:
                             f"{data.get('stage', '')},"
                             f"{data.get('elapsed', 0)},"
                             f"{data.get('stage_elapsed', 0)},"
-                            f"{mt_str}\n"
+                            f"{mt_str},"
+                            f"{self.sensor_location},"
+                            f"{event_str}\n"
                         )
                         self.csv_file.flush()
                         self.manual_temp = None
@@ -312,7 +328,10 @@ class PicoManager:
 
     def get_status(self) -> dict:
         with self.lock:
-            return dict(self.current_status)
+            status = dict(self.current_status)
+            status["sensor_location"] = self.sensor_location
+            status["csv_paused"] = self.csv_paused
+            return status
 
     def get_history(self, minutes: int = 60) -> list:
         """Return recent history points."""
@@ -406,8 +425,10 @@ async def api_start(request: dict):
         "water_volume_liters": request.get("water_volume_liters", 1.0),
         "ambient_temp": request.get("ambient_temp", defaults.get("ambient_temp", 25.0)),
         "pasteurize_temp": request.get("pasteurize_temp", defaults.get("pasteurize_temp", 85.0)),
+        "rapid_heat_duty": machine.get("rapid_heat_duty", defaults.get("rapid_heat_duty", 0.80)),
+        "rapid_heat_cutoff_temp": machine.get("rapid_heat_cutoff_temp", defaults.get("rapid_heat_cutoff_temp", 70.0)),
         "pasteurize_tolerance": defaults.get("pasteurize_tolerance", 1.0),
-        "hold_85_duration_s": request.get("hold_85_duration_min", 5) * 60,
+        "hold_85_duration_s": request.get("hold_85_duration_min", 20) * 60,
         "ferment_temp": request.get("ferment_temp", defaults.get("ferment_temp", 42.0)),
         "ferment_tolerance": defaults.get("ferment_tolerance", 0.5),
         "ferment_duration_s": request.get("ferment_duration_hours", 8) * 3600,
@@ -439,6 +460,34 @@ async def api_manual_temp(request: dict):
     if temp is not None:
         with pico.lock:
             pico.manual_temp = float(temp)
+    return {"status": "ok"}
+
+
+@app.post("/api/sensor_location")
+async def api_sensor_location(request: dict):
+    """Set the sensor placement location (water_bath or inside_pot)."""
+    location = request.get("location", "water_bath")
+    if location not in ("water_bath", "inside_pot"):
+        raise HTTPException(status_code=400, detail="Invalid location. Use 'water_bath' or 'inside_pot'.")
+    with pico.lock:
+        pico.sensor_location = location
+    return {"status": "ok", "sensor_location": location}
+
+
+@app.post("/api/toggle_csv")
+async def api_toggle_csv():
+    """Toggle CSV logging on/off (pause/resume)."""
+    with pico.lock:
+        pico.csv_paused = not pico.csv_paused
+        paused = pico.csv_paused
+    return {"status": "ok", "csv_paused": paused}
+
+
+@app.post("/api/water_swap")
+async def api_water_swap():
+    """Log a water swap event to the CSV."""
+    with pico.lock:
+        pico.water_swap_logged = True
     return {"status": "ok"}
 
 
