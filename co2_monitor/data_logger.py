@@ -2,7 +2,7 @@ import csv
 import os
 from datetime import datetime
 
-MAX_POINTS_IN_MEMORY = 100
+MAX_POINTS_IN_MEMORY = 300
 
 class DataLogger:
     def __init__(self):
