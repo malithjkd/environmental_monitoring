@@ -155,7 +155,7 @@ Navigate to `http://<pi-zero-ip>:8000` in your browser. Select the machine, ente
 ```bash
 scp -r malithjkd@pizero2:~/environmental_monitoring/yogurt_maker/data/ /Users/malithjkd1/Documents/environmental_monitoring/yogurt_maker/
 
-scp -r malithjkd@pizero2:~/environmental_monitoring/yogurt_maker/data /Users/malithjkd1/Documents/environmental_monitoring/yogurt_maker/
+scp -r malithjkd@pizero2:~/environmental_monitoring/yogurt_maker/generated/ /Users/malithjkd1/Documents/environmental_monitoring/yogurt_maker/
 ```
 
 ## Yogurt Starter Reference
