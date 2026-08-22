@@ -2,8 +2,11 @@ from machine import Pin
 import dht
 import time
 
-# DHT22 data pin connected to GPIO3
-sensor = dht.DHT22(Pin(3))
+# Enable internal pull-up on the data pin as a safety net
+data_pin = Pin(3, Pin.IN, Pin.PULL_UP)
+sensor = dht.DHT22(data_pin)
+
+time.sleep(2)  # let the sensor settle after power-up
 
 while True:
     try:
