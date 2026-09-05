@@ -22,24 +22,24 @@ import ujson
 CONFIG = {
     "machine_name": "800W Multi Cooker",
     "power_watts": 800,
-    "water_mass_kg": 1.75,
+    "water_mass_kg": 1.5,
     "k_cool": 0.839,
-    "ambient_temp": 28,
+    "ambient_temp": 27,
     "kp": 0.001048,
-    "ki": 1e-04,
+    "ki": 3e-08,
     "kd": 0.0,
-    "pwm_window_s": 30,
-    "rapid_heat_duty": 0.80,
+    "pwm_window_s": 10,
+    "rapid_heat_duty": 0.8,
     "rapid_heat_cutoff_temp": 70.0,
-    "pasteurize_temp": 85.0,
+    "pasteurize_temp": 90,
     "pasteurize_tolerance": 1.0,
     "hold_85_duration_s": 1200,
-    "ferment_temp": 42.0,
+    "ferment_temp": 42,
     "ferment_tolerance": 0.5,
-    "ferment_duration_s": 28800,
+    "ferment_duration_s": 21600,
     "safety_max_temp": 95.0,
     "sensor_pin": 3,
-    "relay_pin": 15,
+    "relay_pin": 12
 }
 # __CONFIG_END__
 
@@ -90,10 +90,6 @@ class PID:
         self.integral = 0.0
         self.prev_error = 0.0
         self.first_call = True
-        # Store last computed terms for diagnostics
-        self.last_p = 0.0
-        self.last_i = 0.0
-        self.last_d = 0.0
 
     def compute(self, error, dt):
         """Compute PID correction.
@@ -128,12 +124,6 @@ class PID:
             d = self.kd * (error - self.prev_error) / dt
 
         self.prev_error = error
-
-        # Store for diagnostics
-        self.last_p = p
-        self.last_i = i
-        self.last_d = d
-
         return p + i + d
 
     def reset(self):
@@ -141,9 +131,6 @@ class PID:
         self.integral = 0.0
         self.prev_error = 0.0
         self.first_call = True
-        self.last_p = 0.0
-        self.last_i = 0.0
-        self.last_d = 0.0
 
 
 # ============================================================
@@ -440,10 +427,6 @@ def main():
                     "stage": process.stage,
                     "elapsed": int(process.get_elapsed_s(now)),
                     "stage_elapsed": int(process.get_stage_elapsed_s(now)),
-                    "pid_p": round(pid.last_p, 5),
-                    "pid_i": round(pid.last_i, 5),
-                    "pid_d": round(pid.last_d, 5),
-                    "pid_int": round(pid.integral, 1),
                 }
                 print(ujson.dumps(status))
 

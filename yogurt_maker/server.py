@@ -168,7 +168,7 @@ class PicoManager:
         csv_path = self.run_dir / "temperature_log.csv"
         self.csv_file = open(csv_path, "w")
         self.csv_file.write(
-            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C,Sensor_Location,Event\n"
+            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C,Sensor_Location,Event,PID_P,PID_I,PID_D,PID_Integral\n"
         )
 
         raw_log_path = self.run_dir / "raw_output.log"
@@ -293,6 +293,9 @@ class PicoManager:
                             "stage": data.get("stage", "?"),
                             "elapsed": data.get("elapsed", 0),
                             "stage_elapsed": data.get("stage_elapsed", 0),
+                            "pid_p": data.get("pid_p", 0),
+                            "pid_i": data.get("pid_i", 0),
+                            "pid_int": data.get("pid_int", 0),
                             "connected": True,
                             "timestamp": now_str,
                         })
@@ -319,7 +322,11 @@ class PicoManager:
                             f"{data.get('stage_elapsed', 0)},"
                             f"{mt_str},"
                             f"{self.sensor_location},"
-                            f"{event_str}\n"
+                            f"{event_str},"
+                            f"{data.get('pid_p', '')},"
+                            f"{data.get('pid_i', '')},"
+                            f"{data.get('pid_d', '')},"
+                            f"{data.get('pid_int', '')}\n"
                         )
                         self.csv_file.flush()
                         self.manual_temp = None

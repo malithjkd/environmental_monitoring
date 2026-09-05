@@ -4,7 +4,7 @@
             "name": "800W Multi Cooker",
             "power_watts": 800,
             "k_cool": 0.839,
-            "pid": { "kp": 0.001048, "ki": 3e-08, "kd": 0.0 },
+            "pid": { "kp": 0.001048, "ki": 1e-04, "kd": 0.0 },
             "pwm_window_s": 10,
             "rapid_heat_duty": 0.80,
             "rapid_heat_cutoff_temp": 70.0,
