@@ -321,6 +321,7 @@ async function startProcess() {
         ferment_temp: parseFloat(document.getElementById("fermentTemp").value),
         ferment_duration_hours: parseInt(document.getElementById("fermentDuration").value),
         ambient_temp: parseFloat(document.getElementById("ambientTemp").value),
+        start_stage: document.getElementById("startStage").value,
     };
 
     document.getElementById("btnStart").disabled = true;

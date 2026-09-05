@@ -97,6 +97,8 @@ class PicoManager:
             "rapid_heat_cutoff_temp": user_config.get("rapid_heat_cutoff_temp", 70.0),
             "pasteurize_temp": user_config.get("pasteurize_temp", 85.0),
             "pasteurize_tolerance": user_config.get("pasteurize_tolerance", 1.0),
+            "pasteurize_boost_ki": user_config.get("pasteurize_boost_ki", 0.0),
+            "pasteurize_boost_window_s": user_config.get("pasteurize_boost_window_s", 120),
             "hold_85_duration_s": user_config.get("hold_85_duration_s", 1200),
             "ferment_temp": user_config.get("ferment_temp", 42.0),
             "ferment_tolerance": user_config.get("ferment_tolerance", 0.5),
@@ -104,6 +106,7 @@ class PicoManager:
             "safety_max_temp": user_config.get("safety_max_temp", 95.0),
             "sensor_pin": user_config.get("sensor_pin", 3),
             "relay_pin": user_config.get("relay_pin", 12),
+            "start_stage": user_config.get("start_stage", "RAPID_HEAT"),
         }
 
         # Replace the CONFIG block between markers
@@ -168,7 +171,7 @@ class PicoManager:
         csv_path = self.run_dir / "temperature_log.csv"
         self.csv_file = open(csv_path, "w")
         self.csv_file.write(
-            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C,Sensor_Location,Event,PID_P,PID_I,PID_D,PID_Integral\n"
+            "Timestamp,Temperature_C,Setpoint_C,Duty_Cycle,Relay_State,Stage,Elapsed_s,Stage_Elapsed_s,Manual_Temp_C,Sensor_Location,Event,PID_P,PID_I,PID_D,PID_Integral,Duty_Boost\n"
         )
 
         raw_log_path = self.run_dir / "raw_output.log"
@@ -296,6 +299,7 @@ class PicoManager:
                             "pid_p": data.get("pid_p", 0),
                             "pid_i": data.get("pid_i", 0),
                             "pid_int": data.get("pid_int", 0),
+                            "duty_boost": data.get("duty_boost", 0),
                             "connected": True,
                             "timestamp": now_str,
                         })
@@ -326,7 +330,8 @@ class PicoManager:
                             f"{data.get('pid_p', '')},"
                             f"{data.get('pid_i', '')},"
                             f"{data.get('pid_d', '')},"
-                            f"{data.get('pid_int', '')}\n"
+                            f"{data.get('pid_int', '')},"
+                            f"{data.get('duty_boost', '')}\n"
                         )
                         self.csv_file.flush()
                         self.manual_temp = None
@@ -435,6 +440,8 @@ async def api_start(request: dict):
         "kp": machine["pid"]["kp"],
         "ki": machine["pid"]["ki"],
         "kd": machine["pid"]["kd"],
+        "pasteurize_boost_ki": machine.get("pasteurize_boost_ki", 0.0),
+        "pasteurize_boost_window_s": defaults.get("pasteurize_boost_window_s", 120),
         "pwm_window_s": machine.get("pwm_window_s", 30),
         "water_volume_liters": request.get("water_volume_liters", 1.0),
         "ambient_temp": request.get("ambient_temp", defaults.get("ambient_temp", 25.0)),
@@ -449,6 +456,7 @@ async def api_start(request: dict):
         "safety_max_temp": defaults.get("safety_max_temp", 95.0),
         "sensor_pin": defaults.get("sensor_pin", 3),
         "relay_pin": defaults.get("relay_pin", 15),
+        "start_stage": request.get("start_stage", defaults.get("start_stage", "RAPID_HEAT")),
     }
 
     pico.deploy_and_start(user_config)

@@ -40,6 +40,9 @@ CONFIG = {
     "safety_max_temp": 95.0,
     "sensor_pin": 3,
     "relay_pin": 15,
+    "pasteurize_boost_ki": 0.0,
+    "pasteurize_boost_window_s": 120,
+    "start_stage": "RAPID_HEAT",
 }
 # __CONFIG_END__
 
@@ -74,8 +77,32 @@ def scan_sensors():
 
 
 # ============================================================
-# PID Controller
+# Controllers
 # ============================================================
+class RollingIntegral:
+    """Computes integral over a rolling window using a ring buffer."""
+    def __init__(self, capacity):
+        self.capacity = max(1, capacity)
+        self.buffer = [0.0] * self.capacity
+        self.idx = 0
+        self.total = 0.0
+        
+    def add(self, val):
+        self.total -= self.buffer[self.idx]
+        self.buffer[self.idx] = val
+        self.total += val
+        self.idx = (self.idx + 1) % self.capacity
+        
+    def get(self):
+        return self.total
+        
+    def reset(self):
+        for i in range(self.capacity):
+            self.buffer[i] = 0.0
+        self.idx = 0
+        self.total = 0.0
+
+
 class PID:
     """Discrete PID controller with anti-windup clamping.
 
@@ -212,7 +239,7 @@ class YogurtProcess:
 
     def __init__(self, config):
         self.config = config
-        self.stage = "RAPID_HEAT"
+        self.stage = self.config.get("start_stage", "RAPID_HEAT")
         now = utime.ticks_ms()
         self.stage_start_ms = now
         self.process_start_ms = now
@@ -337,6 +364,9 @@ def main():
     pwm = SlowPWM(relay, CONFIG["pwm_window_s"] * 1000)
     process = YogurtProcess(CONFIG)
 
+    rolling_capacity = int(CONFIG.get("pasteurize_boost_window_s", 120) / 2)
+    rolling_int = RollingIntegral(rolling_capacity)
+
     current_temp = 0.0
     duty = 0.0
     convert_started = False
@@ -391,6 +421,8 @@ def main():
                         # Full-power rapid heating — bypass PID entirely
                         duty = CONFIG.get("rapid_heat_duty", 0.80)
                         pid.reset()
+                        rolling_int.reset()
+                        duty_boost = 0.0
                         last_pid_ms = now
                     else:
                         # Feedforward: steady-state duty from physics
@@ -407,8 +439,16 @@ def main():
                         last_pid_ms = now
                         duty_pid = pid.compute(error, dt)
 
+                        # PASTEURIZE specific rolling integral boost
+                        duty_boost = 0.0
+                        if process.stage == "PASTEURIZE":
+                            rolling_int.add(error * dt)
+                            duty_boost = rolling_int.get() * CONFIG.get("pasteurize_boost_ki", 0.0)
+                        else:
+                            rolling_int.reset()
+
                         # Combined duty
-                        duty = duty_ff + duty_pid
+                        duty = duty_ff + duty_pid + duty_boost
 
                     # Clamp to [0, 1]
                     if duty < 0.0:
@@ -420,6 +460,8 @@ def main():
                     # No heating needed (COOL_DOWN or DONE)
                     duty = 0.0
                     pid.reset()
+                    rolling_int.reset()
+                    duty_boost = 0.0
 
                 # Safety hard limit
                 if current_temp > CONFIG["safety_max_temp"]:
@@ -444,6 +486,7 @@ def main():
                     "pid_i": round(pid.last_i, 5),
                     "pid_d": round(pid.last_d, 5),
                     "pid_int": round(pid.integral, 1),
+                    "duty_boost": round(duty_boost, 4),
                 }
                 print(ujson.dumps(status))
 

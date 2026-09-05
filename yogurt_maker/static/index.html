@@ -167,6 +167,17 @@
                     <input type="number" id="ambientTemp" value="25" min="10" max="40" step="1">
                 </div>
 
+                <div class="control-group">
+                    <label for="startStage">Start Stage</label>
+                    <select id="startStage">
+                        <option value="RAPID_HEAT">Rapid Heat (Default)</option>
+                        <option value="PASTEURIZE">Pasteurize (85°C)</option>
+                        <option value="HOLD_85">Hold 85°C</option>
+                        <option value="COOL_DOWN">Cool Down</option>
+                        <option value="FERMENT">Ferment (42°C)</option>
+                    </select>
+                </div>
+
                 <div class="control-group" style="grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
                     <label for="manualTempInput">Log Manual Pot Temp (°C)</label>
                     <div style="display: flex; gap: 8px;">

@@ -6,9 +6,10 @@
             "k_cool": 0.839,
             "pid": {
                 "kp": 0.001048,
-                "ki": 1e-04,
+                "ki": 3e-05,
                 "kd": 0.0
             },
+            "pasteurize_boost_ki": 0.0005,
             "pwm_window_s": 10,
             "rapid_heat_duty": 0.80,
             "rapid_heat_cutoff_temp": 70.0,
@@ -55,6 +56,8 @@
         "sensor_pin": 3,
         "relay_pin": 12,
         "rapid_heat_duty": 0.80,
-        "rapid_heat_cutoff_temp": 70.0
+        "rapid_heat_cutoff_temp": 70.0,
+        "pasteurize_boost_window_s": 120,
+        "start_stage": "RAPID_HEAT"
     }
 }
