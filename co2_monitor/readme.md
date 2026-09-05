@@ -22,7 +22,7 @@ Next, we'll set up the Python environment for the Flask web server on the Pi 5.
 
 1. Navigate to the project directory:
    ```bash
-   cd ~/Documents/environmental_monitoring/co2_monitor
+   cd ~/Documents/environmental_monitoring
    ```
 2. Create and activate a virtual environment:
    ```bash
@@ -58,3 +58,20 @@ If you log back into the Pi 5 later and want to see the server output or stop it
 ```bash
 tmux attach -t co2
 ```
+
+## 4. Auto-start on Boot
+
+If you want the Raspberry Pi to automatically run these steps every time it powers on, you can set it up using `cron`.
+
+1. Open your user's crontab file:
+   ```bash
+   crontab -e
+   ```
+2. If prompted, select your preferred text editor (like `nano`).
+3. Scroll to the very bottom of the file and add this exact line:
+   ```bash
+   @reboot tmux new-session -d -s co2 'bash -c "cd ~/Documents/environmental_monitoring && source .venv/bin/activate && cd co2_monitor && python app.py"'
+   ```
+4. Save and exit (in `nano`, press `Ctrl+O`, `Enter`, then `Ctrl+X`).
+
+Now, whenever your Raspberry Pi restarts, it will automatically start a detached `tmux` session in the background running your app. You can log in anytime and run `tmux attach -t co2` to check on it.
