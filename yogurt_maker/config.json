@@ -4,7 +4,11 @@
             "name": "800W Multi Cooker",
             "power_watts": 800,
             "k_cool": 0.839,
-            "pid": { "kp": 0.001048, "ki": 1e-04, "kd": 0.0 },
+            "pid": {
+                "kp": 0.001048,
+                "ki": 1e-04,
+                "kd": 0.0
+            },
             "pwm_window_s": 10,
             "rapid_heat_duty": 0.80,
             "rapid_heat_cutoff_temp": 70.0,
@@ -14,7 +18,11 @@
             "name": "500W Rice Cooker (Warm Setting)",
             "power_watts": 150,
             "k_cool": 3.0,
-            "pid": { "kp": 0.02, "ki": 0.0002, "kd": 0.0 },
+            "pid": {
+                "kp": 0.02,
+                "ki": 0.0002,
+                "kd": 0.0
+            },
             "pwm_window_s": 30,
             "rapid_heat_duty": 0.80,
             "rapid_heat_cutoff_temp": 65.0,
@@ -24,7 +32,11 @@
             "name": "800W Rice Cooker (Cook Setting)",
             "power_watts": 800,
             "k_cool": 5.0,
-            "pid": { "kp": 0.01, "ki": 0.0001, "kd": 0.0 },
+            "pid": {
+                "kp": 0.01,
+                "ki": 0.0001,
+                "kd": 0.0
+            },
             "pwm_window_s": 30,
             "rapid_heat_duty": 0.80,
             "rapid_heat_cutoff_temp": 70.0,
@@ -38,7 +50,7 @@
         "ferment_temp": 42.0,
         "ferment_tolerance": 0.5,
         "ferment_duration_s": 28800,
-        "ambient_temp": 25.0,
+        "ambient_temp": 27.0,
         "safety_max_temp": 95.0,
         "sensor_pin": 3,
         "relay_pin": 12,

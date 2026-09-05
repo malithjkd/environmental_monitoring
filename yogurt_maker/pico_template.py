@@ -26,7 +26,7 @@ CONFIG = {
     "k_cool": 0.839,
     "ambient_temp": 28,
     "kp": 0.001048,
-    "ki": 1e-04,
+    "ki": 3e-05,
     "kd": 0.0,
     "pwm_window_s": 30,
     "rapid_heat_duty": 0.80,
